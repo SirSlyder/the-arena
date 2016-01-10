@@ -1,0 +1,143 @@
+fileFormatVersion: 2
+guid: f6bf2a783dcc47245bed1e138e3bca1b
+timeCreated: 1440869562
+licenseType: Free
+ModelImporter:
+  serializedVersion: 18
+  fileIDToRecycleName:
+    100000: Cube
+    100002: Cylinder
+    100004: Cylinder_001
+    100006: //RootNode
+    100008: Cube_001
+    100010: Body
+    100012: Laser1
+    100014: Laser2
+    100016: Magazine
+    100018: Rotate1
+    100020: Rotate2
+    100022: Laser3
+    100024: Laser3_001
+    100026: Laser4
+    100028: Laser4_001
+    400000: Cube
+    400002: Cylinder
+    400004: Cylinder_001
+    400006: //RootNode
+    400008: Cube_001
+    400010: Body
+    400012: Laser1
+    400014: Laser2
+    400016: Magazine
+    400018: Rotate1
+    400020: Rotate2
+    400022: Laser3
+    400024: Laser3_001
+    400026: Laser4
+    400028: Laser4_001
+    2300000: Cube
+    2300002: Cylinder
+    2300004: Cylinder_001
+    2300006: Cube_001
+    2300008: Body
+    2300010: Laser1
+    2300012: Laser2
+    2300014: Magazine
+    2300016: Rotate1
+    2300018: Rotate2
+    2300020: Laser3
+    2300022: Laser3_001
+    2300024: Laser4
+    2300026: Laser4_001
+    3300000: Cube
+    3300002: Cylinder
+    3300004: Cylinder_001
+    3300006: Cube_001
+    3300008: Body
+    3300010: Laser1
+    3300012: Laser2
+    3300014: Magazine
+    3300016: Rotate1
+    3300018: Rotate2
+    3300020: Laser3
+    3300022: Laser3_001
+    3300024: Laser4
+    3300026: Laser4_001
+    4300000: Cylinder_001
+    4300002: Cylinder
+    4300004: Cube
+    4300006: Cube_001
+    4300008: Laser2
+    4300010: Laser1
+    4300012: Magazine
+    4300014: Rotate2
+    4300016: Rotate1
+    4300018: Body
+    4300020: Laser3
+    4300022: Laser4
+    4300024: Laser3_001
+    4300026: Laser4_001
+    7400000: Default Take
+    9500000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    splitTangentsAcrossUV: 1
+    normalImportMode: 0
+    tangentImportMode: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

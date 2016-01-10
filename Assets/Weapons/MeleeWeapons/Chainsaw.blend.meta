@@ -1,0 +1,173 @@
+fileFormatVersion: 2
+guid: cafa46596f20afd4ca52eec0ffcc1f55
+timeCreated: 1442430125
+licenseType: Free
+ModelImporter:
+  serializedVersion: 18
+  fileIDToRecycleName:
+    100000: Blade
+    100002: Blade_001
+    100004: Blade_002
+    100006: Blade_003
+    100008: Blade_004
+    100010: Blade_005
+    100012: Blade_006
+    100014: Blade_007
+    100016: Blade_008
+    100018: Blade_009
+    100020: Blade_010
+    100022: Blade_011
+    100024: Blade_012
+    100026: Blade_013
+    100028: Blade_014
+    100030: Blade_015
+    100032: Blade_016
+    100034: Blade_017
+    100036: Blade_018
+    100038: //RootNode
+    100040: Cube
+    400000: Blade
+    400002: Blade_001
+    400004: Blade_002
+    400006: Blade_003
+    400008: Blade_004
+    400010: Blade_005
+    400012: Blade_006
+    400014: Blade_007
+    400016: Blade_008
+    400018: Blade_009
+    400020: Blade_010
+    400022: Blade_011
+    400024: Blade_012
+    400026: Blade_013
+    400028: Blade_014
+    400030: Blade_015
+    400032: Blade_016
+    400034: Blade_017
+    400036: Blade_018
+    400038: //RootNode
+    400040: Cube
+    2300000: Blade
+    2300002: Blade_001
+    2300004: Blade_002
+    2300006: Blade_003
+    2300008: Blade_004
+    2300010: Blade_005
+    2300012: Blade_006
+    2300014: Blade_007
+    2300016: Blade_008
+    2300018: Blade_009
+    2300020: Blade_010
+    2300022: Blade_011
+    2300024: Blade_012
+    2300026: Blade_013
+    2300028: Blade_014
+    2300030: Blade_015
+    2300032: Blade_016
+    2300034: Blade_017
+    2300036: Blade_018
+    2300038: Cube
+    3300000: Blade
+    3300002: Blade_001
+    3300004: Blade_002
+    3300006: Blade_003
+    3300008: Blade_004
+    3300010: Blade_005
+    3300012: Blade_006
+    3300014: Blade_007
+    3300016: Blade_008
+    3300018: Blade_009
+    3300020: Blade_010
+    3300022: Blade_011
+    3300024: Blade_012
+    3300026: Blade_013
+    3300028: Blade_014
+    3300030: Blade_015
+    3300032: Blade_016
+    3300034: Blade_017
+    3300036: Blade_018
+    3300038: Cube
+    4300000: Blade_018
+    4300002: Blade_017
+    4300004: Blade_016
+    4300006: Blade_015
+    4300008: Blade_014
+    4300010: Blade_013
+    4300012: Blade_012
+    4300014: Blade_011
+    4300016: Blade_010
+    4300018: Blade_009
+    4300020: Blade_008
+    4300022: Blade_007
+    4300024: Blade_006
+    4300026: Blade_005
+    4300028: Blade_004
+    4300030: Blade_003
+    4300032: Blade_002
+    4300034: Blade_001
+    4300036: Blade
+    4300038: Cube
+    7400000: Default Take
+    9500000: //RootNode
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    splitTangentsAcrossUV: 1
+    normalImportMode: 0
+    tangentImportMode: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
