@@ -482,6 +482,7 @@ function Update () {
     }
 }
 
+// This function cycles through songs.
 function PickSong () {
 	if(songSelected != Songs.length)
 	{
