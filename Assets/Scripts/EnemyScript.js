@@ -15,6 +15,7 @@ var rknee : Rigidbody;
 var lasthit : Rigidbody = null;
 
 var player : Transform;
+var dead : boolean = false;
 
 var health : int = 10;
 var faint : boolean = false;
@@ -44,10 +45,6 @@ function Start () {
 
 
 function Update () {
-	if(health < -1)
-	{
-		health = 0;
-	}
 	if(faint == true)
 	{
 		GetComponent(NavMeshAgent).Stop(true);
@@ -97,9 +94,10 @@ function Update () {
 		health -= 2;
 		lasthit = rknee;
 	}
-	if(health == 0)
+	if(health == 0 && dead == false)
 	{
-		anim2.Stop("EnemyWalk");	
+		anim2.Stop("EnemyWalk");
+		dead = true;	
 		head.isKinematic = false;
 		mspine.isKinematic = false;
 		larm.isKinematic = false;
@@ -113,11 +111,11 @@ function Update () {
 		rknee.isKinematic = false;
 		if(lasthit != "larm" || lasthit != "rarm" || lasthit != "lknee" || lasthit != "rknee")
 		{
-			lasthit.velocity = player.TransformDirection (Vector3.forward * 50);
+			lasthit.velocity = player.TransformDirection (Vector3.forward * 5);
 		}
 		else
 		{
-			lasthit.velocity = player.TransformDirection (Vector3.forward * 10);
+			lasthit.velocity = player.TransformDirection (Vector3.forward * 2);
 		}
 		GetComponent(NavMeshAgent).Stop(true);
 		target = null;

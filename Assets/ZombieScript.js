@@ -4,9 +4,13 @@ var attacktimer : float;
 var speed : float;
 var target : Transform;
 var moving : NavMeshAgent;
+var decomposetimer : float;
+var isJumping : boolean = false;
 
 private var dead : boolean = false;
 
+var damagedfor : float;
+var expectedMoveSpeed : float;
 var head : Rigidbody;
 var mspine : Rigidbody;
 var larm : Rigidbody;
@@ -51,7 +55,22 @@ function Awake () {
 
 
 function Update () {
+	if(dead == true)
+	{
+		decomposetimer += Time.deltaTime;
+		if(decomposetimer >= 10)
+		{
+			Destroy(gameObject);
+		}
+	}
 	attacktimer += Time.deltaTime;
+	if(attacktimer >= anim2["EnemyAttack1"].length && dead == false)
+	{
+		if(touching == null && dead == false && isJumping == false)
+		{
+			GetComponent(NavMeshAgent).Resume();
+		}
+	}
 	if(faint == true)
 	{
 		GetComponent(NavMeshAgent).Stop(true);
@@ -117,11 +136,25 @@ function Update () {
 		lknee.isKinematic = false;
 		rhip.isKinematic = false;
 		rknee.isKinematic = false;
-		GetComponent(NavMeshAgent).Stop(true);
+		if(GetComponent(NavMeshAgent).enabled == true)
+		{
+			GetComponent(NavMeshAgent).Stop(true);
+		}
 		health = -1;
 		player.SendMessage("ZedDown", SendMessageOptions.DontRequireReceiver);
+		if(lasthit != head && lasthit != null)
+		{
+			lasthit.velocity = player.TransformDirection (Vector3.forward * damagedfor);
+		}
+		else if(lasthit == head && lasthit != null)
+		{
+			lasthit.velocity = player.TransformDirection(Vector3.forward * (damagedfor / 4));
+		}
+		Destroy(GetComponent.<NavMeshAgent>());
+		Destroy(GetComponent.<BoxCollider>());
+		Destroy(GetComponent.<CapsuleCollider>());
 	}
-	if(health > 0)
+	if(health > 0 && isJumping == false)
 	{
 		myTransform.Translate(Vector3.forward * moveSpeed * Time.deltaTime);
 		GetComponent(NavMeshAgent).destination = target.position;
@@ -137,6 +170,16 @@ function Update () {
         	target = GameObject.FindGameObjectWithTag("Player").transform;
         } 
 		anim2.PlayQueued("EnemyWalk1", QueueMode.CompleteOthers);
+	}
+	if(isJumping == true)
+	{
+		myTransform.Translate(Vector3.forward * 2 * Time.deltaTime);
+		GetComponent.<Rigidbody>().isKinematic = false;
+		if(GetComponent(NavMeshAgent).enabled == true)
+		{
+			GetComponent(NavMeshAgent).Stop(true);
+			GetComponent(NavMeshAgent).enabled = false;
+		}
 	}
 }
 
@@ -164,6 +207,7 @@ function Damaged (damage : float)
 {
 	if(health > 0)
 	{
+		damagedfor = damage * 2;
 		health -= damage;
 		if(health > 0)
 		{
@@ -176,11 +220,31 @@ function Damaged (damage : float)
 	}
 }
 
+function Fast () {
+	expectedMoveSpeed = 0.75;
+}
+
+function Jump () {
+	if(dead == false)
+	{
+		isJumping = true;
+	}
+}
+
+function StopJump () {
+	yield WaitForSeconds(anim2["EnemyLand"].length);
+	isJumping = false;
+	GetComponent(NavMeshAgent).enabled = true;
+	GetComponent(NavMeshAgent).ResetPath();
+	GetComponent.<Rigidbody>().isKinematic = true;
+	target = GameObject.FindGameObjectWithTag("Player").transform;
+}
+
 function OnTriggerStay (other : Collider)
 {
 	if(health > 0 && attacktimer >= anim2["EnemyAttack1"].length / 0.75)
 	{
-		if(other.tag != "Enemy")
+		if(other.tag != "Enemy" && other.gameObject.layer != 9)
 		{
 			attacktimer = 0;
 			touching = other.transform;
@@ -206,19 +270,20 @@ function OnTriggerStay (other : Collider)
 function OnTriggerExit (other : Collider) {
 	if(health > 0)
 	{
-		if(other.name == target.name)
-		{
-			touching = null;
-			moveSpeed = 0.75;
-		}
+		touching = null;
+		moveSpeed = expectedMoveSpeed;
 	}
 }
 
 function Attack ()
 {
+	attacktimer = 0;
 	anim2.Stop("EnemyWalk1");
 	anim2.CrossFade("EnemyAttack1");
-	GetComponent(NavMeshAgent).Stop(true);
+	if(GetComponent(NavMeshAgent).enabled == true)
+	{
+		GetComponent(NavMeshAgent).Stop(true);
+	}
 	yield WaitForSeconds(anim2["EnemyAttack1"].length / 2);
 	if(touching != null && health > 0)
 	{
@@ -226,13 +291,32 @@ function Attack ()
 		Debug.Log("Hit " + touching.name);
 	}
 	yield WaitForSeconds(anim2["EnemyAttack1"].length / 2);
-	GetComponent(NavMeshAgent).Resume();
-	moveSpeed = 0.75;
+	if(dead == false && touching == null && isJumping == false)
+	{
+		GetComponent(NavMeshAgent).Resume();
+		moveSpeed = expectedMoveSpeed;
+	}
 }
 
 function Health (heal : int)
 {
 	health = 15 * heal;
+	moveSpeed = expectedMoveSpeed;
+	anim2["EnemyWalk1"].speed = (expectedMoveSpeed / 0.75);
+}
+
+function Explode (damage : float)
+{
+	health -= damage;
+}
+
+function Launched (launched : Transform)
+{
+	if(health <= 0)
+	{
+		yield WaitForSeconds(0.01);
+		launched.SendMessage("Push", GetComponent.<Rigidbody>(), SendMessageOptions.DontRequireReceiver);
+	}
 }
 
 function Damage (part : String)

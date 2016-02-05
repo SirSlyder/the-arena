@@ -13,6 +13,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private bool m_IsWalking;
         [SerializeField] private float m_WalkSpeed;
         [SerializeField] private float m_RunSpeed;
+		[SerializeField] private float m_IntendedSpeed;
+		[SerializeField] private float m_IntendedRunSpeed;
         [SerializeField] [Range(0f, 1f)] private float m_RunstepLenghten;
         [SerializeField] private float m_JumpSpeed;
         [SerializeField] private float m_StickToGroundForce;
@@ -256,13 +258,21 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
 		void SpeedUp (float speed)
 		{
-			m_WalkSpeed = m_WalkSpeed * speed;
-			m_RunSpeed = m_RunSpeed * speed;
+			m_WalkSpeed = m_IntendedSpeed * speed;
+			m_RunSpeed = m_IntendedRunSpeed * speed;
 		}
 		void SpeedDown ()
 		{
-			m_WalkSpeed = 5;
-			m_RunSpeed = 7;
+			m_WalkSpeed = m_IntendedSpeed;
+			m_RunSpeed = m_IntendedRunSpeed;
+		}
+		void CantSprint()
+		{
+			m_IntendedRunSpeed = 5;
+		}
+		void CanSprint()
+		{
+			m_IntendedRunSpeed = 7;
 		}
     }
 }
