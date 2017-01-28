@@ -22,16 +22,34 @@ public class MouseLook : MonoBehaviour {
 	public float sensitivityX = 15F;
 	public float sensitivityY = 15F;
 
+	public float intendedX = 15F;
+	public float intendedY = 15F;
+
 	public float minimumX = -360F;
 	public float maximumX = 360F;
 
 	public float minimumY = -60F;
 	public float maximumY = 60F;
 
+	public bool paused = false;
+	public bool allowPause = true;
+
 	float rotationY = 0F;
 
 	void Update ()
 	{
+		if (allowPause == true) {
+			if (Input.GetKeyDown (KeyCode.Escape)) {
+				paused = !paused;
+			}
+			if (paused) {
+				sensitivityY = 0;
+				sensitivityX = 0;
+			} else {
+				sensitivityY = intendedY;
+				sensitivityX = intendedX;
+			}
+		}
 		if (axes == RotationAxes.MouseXAndY)
 		{
 			float rotationX = transform.localEulerAngles.y + Input.GetAxis("Mouse X") * sensitivityX;
@@ -59,5 +77,23 @@ public class MouseLook : MonoBehaviour {
 		// Make the rigid body not change rotation
 		if (GetComponent<Rigidbody>())
 			GetComponent<Rigidbody>().freezeRotation = true;
+	}
+
+	void Dead ()
+	{
+		sensitivityY = 0;
+		sensitivityX = 0;
+	}
+
+	void Sensitivity (int sense)
+	{
+		intendedX = sense * 2;
+		intendedY = sense * 2;
+	}
+
+	void Inverted(bool inverted) {
+		if (inverted) {
+			intendedY = -intendedY * 2;
+		}
 	}
 }

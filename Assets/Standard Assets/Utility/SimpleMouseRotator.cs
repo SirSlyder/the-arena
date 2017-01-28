@@ -16,6 +16,7 @@ namespace UnityStandardAssets.Utility
         // on a moving spaceship with a limited angular range)
         // to have no constraints on an axis, set the rotationRange to 360 or greater.
         public Vector2 rotationRange = new Vector3(70, 70);
+		private Vector2 rotationRangeOld = new Vector3 (70, 70);
         public float rotationSpeed = 10;
         public float dampingTime = 0.2f;
         public bool autoZeroVerticalOnMobile = true;
@@ -32,6 +33,7 @@ namespace UnityStandardAssets.Utility
         private void Start()
         {
             m_OriginalRotation = transform.localRotation;
+			rotationRangeOld = rotationRange;
         }
 
 
@@ -108,6 +110,12 @@ namespace UnityStandardAssets.Utility
 
             // update the actual gameobject's rotation
             transform.localRotation = m_OriginalRotation*Quaternion.Euler(-m_FollowAngles.x, m_FollowAngles.y, 0);
+
+			if (Input.GetButton ("Fire2")) {
+				rotationRange = new Vector2 (0, 0);
+			} else {
+				rotationRange = rotationRangeOld;
+			}
         }
     }
 }

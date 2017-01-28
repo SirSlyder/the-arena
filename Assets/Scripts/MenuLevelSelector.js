@@ -1,54 +1,55 @@
 ﻿#pragma strict
 
+import System.Collections.Generic;
+
 var uID : int;
-var LevelText : TextMesh;
+var LevelText : UI.Text;
 var uTextName : String;
 var uLevelName : String;
-var uImage : Transform;
+var uImage : Sprite;
 
 public class Level {
-	var ID : int;
+	var id : int;
 	var TextName : String;
 	var LevelName : String;
-	var LevelImage : Transform;
+	var image : Sprite;
 }
 
-var Levels : Level[];
+var Levels : List.<Level>;
 
 function Update () {
+	if(uID == 0)
+	{
+		uID = Levels.Count;
+	}
+	LevelText.text = uTextName;
 	if(gameObject.active == true)
 	{
 		for (var i : Level in Levels)
 		{
-			if(uID == i.ID)
+			if(i.id == uID)
 			{
-				uTextName = i.TextName;
 				uLevelName = i.LevelName;
-				uImage = i.LevelImage;
-				uImage.gameObject.active = true;
+				uImage = i.image;
+				uTextName = i.TextName;
+				GetComponent.<UI.Image>().sprite = uImage;
 			}
 		}
 	}
 }
 
-function StartLevel () {
-	Application.LoadLevel(uLevelName);
-}
-
-function CycleFore () {
-	uImage.gameObject.active = false;
-	uID += 1;
-	if(uID > Levels.length)
+function ChangeLevel (increase : int)
+{
+	if(uID == Levels.Count && uID > 0)
 	{
 		uID = 1;
 	}
+	else
+	{
+		uID += increase;
+	}
 }
 
-function CycleBack () {
-	uImage.gameObject.active = false;
-	uID -= 1;
-	if(uID == 0)
-	{
-		uID = Levels.length;
-	}
+function StartLevel () {
+	Application.LoadLevel(uLevelName);
 }

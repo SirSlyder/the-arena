@@ -24,7 +24,7 @@ function Awake()
 
 function Execute() {
 	Player.SendMessage("Gun", GunType);
-	Player.SendMessage("CurrentAmmo", Ammo);
+	Player.SendMessage("CurrentAmmo", Ammo, SendMessageOptions.DontRequireReceiver);
 	Destroy(gameObject);
 }
 

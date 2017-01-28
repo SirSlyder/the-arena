@@ -14,7 +14,7 @@ namespace UnityStandardAssets.Water
         {
             AcquireComponents();
         }
-	
+
 
         void AcquireComponents()
         {

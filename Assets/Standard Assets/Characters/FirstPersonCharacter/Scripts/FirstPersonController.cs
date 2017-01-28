@@ -13,8 +13,6 @@ namespace UnityStandardAssets.Characters.FirstPerson
         [SerializeField] private bool m_IsWalking;
         [SerializeField] private float m_WalkSpeed;
         [SerializeField] private float m_RunSpeed;
-		[SerializeField] private float m_IntendedSpeed;
-		[SerializeField] private float m_IntendedRunSpeed;
         [SerializeField] [Range(0f, 1f)] private float m_RunstepLenghten;
         [SerializeField] private float m_JumpSpeed;
         [SerializeField] private float m_StickToGroundForce;
@@ -104,7 +102,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             // get a normal for the surface that is being touched to move along it
             RaycastHit hitInfo;
             Physics.SphereCast(transform.position, m_CharacterController.radius, Vector3.down, out hitInfo,
-                               m_CharacterController.height/2f);
+                               m_CharacterController.height/2f, ~0, QueryTriggerInteraction.Ignore);
             desiredMove = Vector3.ProjectOnPlane(desiredMove, hitInfo.normal).normalized;
 
             m_MoveDir.x = desiredMove.x*speed;
@@ -131,6 +129,8 @@ namespace UnityStandardAssets.Characters.FirstPerson
 
             ProgressStepCycle(speed);
             UpdateCameraPosition(speed);
+
+            m_MouseLook.UpdateCursorLock();
         }
 
 
@@ -255,24 +255,5 @@ namespace UnityStandardAssets.Characters.FirstPerson
             }
             body.AddForceAtPosition(m_CharacterController.velocity*0.1f, hit.point, ForceMode.Impulse);
         }
-
-		void SpeedUp (float speed)
-		{
-			m_WalkSpeed = m_IntendedSpeed * speed;
-			m_RunSpeed = m_IntendedRunSpeed * speed;
-		}
-		void SpeedDown ()
-		{
-			m_WalkSpeed = m_IntendedSpeed;
-			m_RunSpeed = m_IntendedRunSpeed;
-		}
-		void CantSprint()
-		{
-			m_IntendedRunSpeed = 5;
-		}
-		void CanSprint()
-		{
-			m_IntendedRunSpeed = 7;
-		}
     }
 }

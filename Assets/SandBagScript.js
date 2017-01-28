@@ -1,4 +1,5 @@
 ﻿#pragma strict
+import System.Collections.Generic;
 
 var Box : Texture2D;
 var Style : GUIStyle;
@@ -8,34 +9,51 @@ var targety : float;
 var repairtimer : float;
 private var guiShow : boolean = false;
 private var repair : boolean = false;
+var SandBagID : List.<int>;
+var SandBagPos : List.<Vector3>;
+var SandBagRot : List.<Vector3>;
+var SandBags : List.<Transform>;
+var itemshowing : int;
+var step : float;
+var Player : Transform;
 
-public class Sandbag
-{
-	var ID : int;
-	var Bag : Rigidbody;
-	var Destination : Vector3;
-	var roty : float;
-	var rotx : float;
-	var rotz : float;
-}
-
-var Sandbags : Sandbag[];
-
-function Update () {
-	for(var i : Sandbag in Sandbags)
+function Awake () {
+	for(var i : Transform in transform)
 	{
-		if(i.ID > health)
+		if(i.name == "SandBagActual")
 		{
-			if(i.Bag.isKinematic == true)
-			{
-				i.Bag.isKinematic = false;
-				i.Bag.GetComponent.<Collider>().enabled = true;
-			}
+			SandBagID.Add(itemshowing);
+			itemshowing += 1;
+			SandBagPos.Add(i.position);
+			SandBagRot.Add(i.localEulerAngles);
+			SandBags.Add(i);
 		}
 	}
-	if(health < 0)
+}
+
+function Update () {
+	for(var i : int in SandBagID)
+	{
+		if(i < 6 - health)
+		{
+			SandBags[i].GetComponent.<Rigidbody>().isKinematic = false;
+			SandBags[i].GetComponent.<Rigidbody>().GetComponent.<Collider>().enabled = true;
+		}
+		else
+		{
+			SandBags[i].GetComponent.<Rigidbody>().isKinematic = true;
+			SandBags[i].position = Vector3.MoveTowards(SandBags[i].position, SandBagPos[i], step);
+			SandBags[i].localEulerAngles = SandBagRot[i];
+		}
+	}
+	if(health <= 0)
 	{
 		health = 0;
+		gameObject.tag = "DestroyedSandBag";
+	}
+	else
+	{
+		gameObject.tag = "Sandbag";
 	}
 }
 
@@ -51,11 +69,12 @@ function LookAway () {
 	guiShow = false;
 }
 
-function Hold () {
-	if(health != 4)
+function Hold (play : Transform) {
+	Player = play;
+	if(health != 6)
 	{
-		GetComponent.<Animation>().PlayQueued("SandBagRepair" + health);
-		health = 4;
+		health += 1;
+		Player.SendMessage("RepairPoints", SendMessageOptions.DontRequireReceiver);
 	}
 }
 
@@ -65,7 +84,7 @@ function PlayerHit () {
 
 function OnGUI () {
 	if (guiShow == true) {
-		if(health != 4)
+		if(health != 6)
 		{
 			var message = "Hold E to Repair";
 			GUI.DrawTexture(Rect(Screen.width / 2 - 98, Screen.height / 2 + 32, 200, 25), Box);

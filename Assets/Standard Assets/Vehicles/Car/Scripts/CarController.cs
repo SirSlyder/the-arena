@@ -363,5 +363,11 @@ namespace UnityStandardAssets.Vehicles.Car
             }
             return false;
         }
+
+		private void OnCollisionEnter(Collision other){
+			if (CurrentSpeed > 15) {
+				other.transform.SendMessage ("RunOver", CurrentSpeed, SendMessageOptions.DontRequireReceiver);
+			}
+		}
     }
 }

@@ -69,12 +69,12 @@ private Camera playerCam;
 	}
  
 	void  OnGUI (){
-		if(m_bIsCrosshairVisible)
-		  if(m_DefaultReticle){
-			GUI.DrawTexture(m_crosshairRect, m_crosshairTexture);
-		 }
-		  if(m_UseReticle){
-			GUI.DrawTexture(m_crosshairRect, m_useTexture);
-		 }
+		if(m_bIsCrosshairVisible && !Input.GetButton("Fire2"))
+			if(m_DefaultReticle){
+				GUI.DrawTexture(m_crosshairRect, m_crosshairTexture);
+			}
+			if(m_UseReticle){
+				GUI.DrawTexture(m_crosshairRect, m_useTexture);
+			}
 	}
 }

@@ -13,9 +13,10 @@ var ucontents : Color;
 var udecal : Renderer;
 var isLimited : boolean;
 var Self : Transform;
-var Player : Transform;
-var emitter : Light;
 var decalholder : Transform;
+var lights : Light;
+var lcolor : Color;
+var play : Transform;
 
 public class Perk {
 	var id : int;
@@ -30,9 +31,7 @@ var Perks : Perk[];
 private var children : Transform[];
 
 function Awake () {
-	Player = GameObject.FindGameObjectWithTag("MainCamera").transform;
 	Self = transform;
-	emitter = transform.Find("Emitter").GetComponent.<Light>();
 	for(var i : Perk in Perks)
 	{
 		if(i.id == uid)
@@ -40,10 +39,13 @@ function Awake () {
 			uname = i.name;
 			uprice = i.price;
 			ucontents = i.contents;
-			udecal = decalholder.GetComponent.<Renderer>();
-			udecal.material = i.decal;
+			if(decalholder != null)
+			{
+				udecal = decalholder.GetComponent.<Renderer>();
+				udecal.material = i.decal;
+			}
 			isLimited = i.limited;
-			emitter.color = ucontents;
+			lcolor = i.contents;
 		}
 	}
 	for (var t : Transform in transform)
@@ -55,6 +57,29 @@ function Awake () {
  	}
 }
 
+function Update () {
+	if(lights != null)
+	{
+		lights.color = lcolor;
+		if(activated == true)
+		{
+			lights.gameObject.active = true;
+			if(lights.intensity < 1)
+			{
+				lights.intensity += Time.deltaTime;
+			}
+			else if(lights.intensity >= 1)
+			{
+				lights.intensity = 1;
+			}
+		}
+		else
+		{
+			lights.gameObject.active = false;
+		}
+	}
+}
+
 function LookAt () {
 	guiShow = true;
 }
@@ -63,12 +88,21 @@ function LookAway () {
 	guiShow = false;
 }
 
-function Hold () {
-	if(inUse == false && activated == true)
+function Hold (Player : Transform) {
+	if(inUse == false && Player.GetComponent.<WeaponScript>().Points >= uprice && activated == true)
 	{
-		Debug.Log("Bought Perk");
-		Player.SendMessage("BuyPerk", uprice, SendMessageOptions.DontRequireReceiver);
-		Player.SendMessage("BuyFrom", Self, SendMessageOptions.DontRequireReceiver);
+		Player.GetComponent.<WeaponScript>().Points -= uprice;
+		inUse = true;
+		uses += 1;
+		Player.SendMessage("PerkColour", ucontents, SendMessageOptions.DontRequireReceiver);
+		Player.SendMessage("Perk", uid, SendMessageOptions.DontRequireReceiver);
+		if(uses == 3 && isLimited == true)
+		{
+			yield WaitForSeconds(2);
+			GetComponent.<Animation>().Play("DeActivate");
+			yield WaitForSeconds(GetComponent.<Animation>()["DeActivate"].length);
+			activated = false;
+		}
 	}
 }
 
@@ -76,29 +110,12 @@ function CanUse () {
 	inUse = false;
 }
 
-function Update () {
-	if(activated == false)
-	{
-		emitter.intensity = 0;
-	}
-	else
-	{
-		emitter.intensity = 1;
-	}
+function PowerUp () {
+	activated = true;
 }
 
 function Buy () {
-	inUse = true;
-	uses += 1;
-	Player.SendMessage("PerkColour", ucontents, SendMessageOptions.DontRequireReceiver);
-	Player.SendMessage("Perk", uid, SendMessageOptions.DontRequireReceiver);
-	if(uses == 3 && isLimited == true)
-	{
-		yield WaitForSeconds(2);
-		GetComponent.<Animation>().Play("DeActivate");
-		yield WaitForSeconds(GetComponent.<Animation>()["DeActivate"].length);
-		activated = false;
-	}	
+	
 }
 
 function OnGUI ()

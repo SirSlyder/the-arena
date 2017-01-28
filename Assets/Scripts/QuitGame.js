@@ -2,10 +2,8 @@
 
 var Controller : Transform;
 
-function OnMouseDown() {
-	if(Input.GetKeyDown(KeyCode.Mouse0))
-	{
-		Controller.SendMessage("Save", SendMessageOptions.DontRequireReceiver);
-		Application.Quit();
-	}
+function Quit() {
+	Controller.SendMessage("Save", SendMessageOptions.DontRequireReceiver);
+	Debug.Log("Quit game.");
+	Application.Quit();
 }

@@ -1,11 +1,76 @@
 ﻿#pragma strict
 import System.Collections.Generic;
+import UnityEngine.Networking;
 
 // ---------- KEY ----------
 // u = universal
 // uM = universal (melee)
 
+// ---------- UI ----------
+
+var speedTest : float;
+var speedTime : float;
+
+@Header ("UI Related Variables")
+var uiSlot1 : UI.Image;
+var uiSlot2 : UI.Image;
+var uiSlot2two : UI.Image;
+var uiSlot31 : UI.Image;
+var uiSlot32 : UI.Image;
+var uiSlot33 : UI.Image;
+var uiSlot34 : UI.Image;
+var uiSlot4 : UI.Image;
+var uiSlot42 : UI.Image;
+var uiCarrier : Canvas;
+var ammoCounter : UI.Text;
+var healthCounter : UI.Text;
+var damageIndicator : UI.Image;
+var points : UI.Text;
+var meleeIcon : UI.Image;
+var uiPerk1 : UI.Image;
+var uiPerk2 : UI.Image;
+var uiPerk3 : UI.Image;
+var uiPerk4 : UI.Image;
+
+var uiRoundText : UI.Text;
+
+var uiNotification : UI.Text;
+var accLeft : UI.Image;
+var accRight : UI.Image;
+var accUp : UI.Image;
+var accDown : UI.Image;
+
 // ---------- MISC ----------
+
+@Header ("Miscellaneous")
+
+var spinnerhost : Transform;
+
+var quittext : GameObject;
+var paused : boolean = false;
+
+var gamecontroller : GameObject;
+
+var deadtimer : float;
+
+var waveText : UI.Text;
+
+var cam : Camera;
+var cam2 : Camera;
+var cam3 : Camera;
+
+var bloodObj : Rigidbody;
+
+var fireCool : float;
+var realaccuracy : float;
+var fireaccuracyinc : float;
+
+var accuracyright : Texture2D;
+var accuracyup : Texture2D;
+var accuracyleft : Texture2D;
+var accuracydown : Texture2D;
+
+var aimyThing : Transform;
 
 var canBuy : boolean = false;
 
@@ -25,17 +90,16 @@ var buyprice : int;
 var dead : boolean = false;
 var controller : Transform;
 var textColor : GUIStyle;
-private var coolingDown : boolean = false;
+var coolingDown : boolean = false;
 var roundTimer : float;
 var coolDown : int = 5;
 var layerMask : LayerMask;
 var spawner : GameObject[];
 
-var zedcount : int = 6;
-
-var damageindicator : Texture2D;
+var zedcount : int;
 
 var Points : int;
+var oldPoints : int;
 
 var safeArea : Texture2D;
 
@@ -43,48 +107,90 @@ var speed : float;
 
 var equipped = "";
 var flashlight : Transform;
-var animator : Animation;
-var animator2 : Animation;
+
 var timer : float;
 var aimer : Transform;
 var gunAudioSource : AudioSource;
 var musicAudioSource : AudioSource;
 var playerController : Transform;
 
-// ---------- WAND VARIABLES/CLASSES ----------
+@Header ("ANIMATION")
+var animator1 : Animation;
+var animator2 : Animation;
+var animator3 : Animation;
 
-var gotWand : boolean = false;
-var wandAmmo : int;
-var wandChargeTime : float;
-var wandType : int;
-var wandLight : Light;
-var wandProjectile : Transform;
-var WandTypeList : List.<int>;
+// ---------- Slot 4 VARIABLES/CLASSES ----------
+
+@Header ("Slot 4 Variables")
+
+var slot4ID : int = 0;
+var slot4Name : String;
+var slot4Ammo : int;
+var slot4AmmoConsume : int;
+var slot4MaxAmmo : int;
+var slot4ChargeTime : float;
+var slot4Types : int;
+var slot4Type : int;
+var slot4Projectiles : List.<Rigidbody>;
+var slot4Projectile : Rigidbody;
+
+var slot4Weapons : List.<Slot4Gun>;
+
+public class Slot4Gun {
+	var ID : int;
+	var name : String;
+	var ammo : int;
+	var ammoconsumption : int;
+	var chargetime : float;
+	var types : int;
+	var projectiles : List.<Rigidbody>;
+}
+
+// ---------- SLOT 5 VARIABLES/CLASSES ----------
+
+@Header ("Slot 5 Variables")
+
+var slot5name : String;
+var slot5equipped : boolean = false;
+var slot5got : boolean = false;
 
 // ---------- PLAYER VARIABLES/CLASSES ----------
+
+@Header ("Player Related Variables")
+
+var aimPause : float;
+
+var sprinting : boolean = false;
 
 var Round : int;
 
 var healthtimer : float;
+var healthcooldowntimer : float;
 var DamageResist : float;
 var Health : int = 100;
-var labelHeight = Screen.height - (Screen.height / 114);
-var labelHeight2 = Screen.height / 29;
-var labelWidth = 0 + (Screen.width / 80);
-var labelWidth2 = Screen.width - (Screen.width / 8);
-var screenHeight = Screen.height;
-var screenWidth = Screen.width;
 
 // ---------- GRENADE VARIABLES/CLASSES ----------
 
+var grenadeS1 : UI.Image;
+var grenadeS2 : UI.Image;
+var grenadeS3 : UI.Image;
+var grenadeS4 : UI.Image;
+
+@Header ("Grenade Variables")
+
+var grenadeExplode : GameObject;
+var grenadeCook : float;
+var grenadeCooking : boolean = false;
+var cooktimer : float;
 var grenadeProj : Rigidbody;
-var prevTake : Rigidbody;
 var PlayerGrenade : Transform;
 var uColour : Color;
 var isLoaded : boolean = false;
 var SelectedGrenade : Texture2D;
 public enum GType {Explosive = 1, Spread = 2}
 public enum GElement {Explosive = 1, Fire = 2, Shock = 3, Water = 4, Petrol = 5}
+var gName : String;
+var grenadeModel : Material;
 
 public class Grenade {
 	var ID : int;
@@ -93,13 +199,17 @@ public class Grenade {
 	var type : GType;
 	var element : GElement;
 	var Colour : Color;
+	var model : Transform;
 }
 
 var Grenades : Grenade[];
 var GrenadeList : List.<int>;
 
+var grenadeEquipped : int = 1;
+
 // ---------- PERK VARIABLES/CLASSES ----------
 
+@Header ("Perk Variables")
 var PerkMachines : GameObject[];
 public enum PerkEffects{Revive = 1, Health = 2, FireSpeed = 3, ReloadSpeed = 4};
 
@@ -114,12 +224,18 @@ var PerkList : List.<int>;
 
 // ---------- PHONE VARIABLES/CLASSES ----------
 
+@Header ("Phone Variables")
+
+var statusEffectMulti : float = 1;
+var phonetimed : float;
+var statusText : UI.Text;
+
 var phoneEquipped : boolean = false;
 var isPlaying : boolean = false;
 var songID : int;
 var songSelected : int;
 
-var accuracyMulti : float;
+var accuracyMulti : float = 0;
 var damageMulti : float;
 var speedMulti : float;
 var meleeSpeedMulti : float;
@@ -133,7 +249,7 @@ var usS2Name : TextMesh;
 var usS2Effect : TextMesh;
 var usS2Effect2 : TextMesh;
 
-var phoneAnimator : Animation;
+var phoneanimator1 : Animation;
 
 public enum Effects{Back = 0, Speed = 1, Damage = 2, Accuracy = 3, MeleeSpeed = 4};
 
@@ -152,6 +268,8 @@ public var Songs : Song[];
 
 // ---------- MELEE VARIABLES/CLASSES ----------
 
+@Header ("Melee Variables")
+var uMID : int;
 var uMName : String;
 var uMDamage : float;
 var uSpeedMultiplier : float;
@@ -161,6 +279,7 @@ var Distance : float;
 var uMTexture : Texture2D;
 var uMTransform : Transform;
 var uMDistance : float;
+var uMSound : AudioClip;
 
 public class MeleeItem
 {
@@ -173,11 +292,22 @@ public class MeleeItem
 	var texture : Texture2D;
 	var transform : Transform;
 	var distance : float;
+	var sound : AudioClip;
 }
 
 var MeleeList : MeleeItem[];
 
 // ---------- GUN VARIABLES/CLASSES ----------
+
+@Header ("Gun Variables")
+
+var bulletProj : Rigidbody;
+
+var fired : boolean = false;
+var firing : boolean = false;
+
+var gunequipped : int = 1;
+var guns : int = 1;
 
 var reloading : boolean = false;
 
@@ -190,16 +320,62 @@ var uMaxClip : int = 0;
 var uReserve : int;
 var uReserveMax : int;
 var uDamage : float = 0;
-var uTimer : float = 0;
+var uRPM : int = 0;
 var uPellets : int = 0;
 var uAccuracy : float = 0;
 var uIsAutomatic : boolean;
 var uSingleReload : boolean;
 var uAudio : AudioClip;
-var uMuzzle : Transform;
-var uTexture : Texture2D;
+var uAimReduce : float;
+var reducingAim : float;
+var uScoped : boolean;
+var uFovZoom : int;
+var uRSet : String;
+var uRTime : int;
+var uSPos : Vector3;
+var uSRot : Vector3;
+
+var intendedPellets2 : int;
+var intendedDamage2: int;
+var u2ID : int;
+var u2Name : String;
+var u2Ammo : int = 0;
+var u2MaxClip : int = 0;
+var u2Reserve : int;
+var u2ReserveMax : int;
+var u2Damage : float = 0;
+var u2RPM : int = 0;
+var u2Pellets : int = 0;
+var u2Accuracy : float = 0;
+var u2IsAutomatic : boolean;
+var u2SingleReload : boolean;
+var u2Audio : AudioClip;
+var u2AimReduce : float;
+var u2scoped : boolean;
+var u2fovZoom : int;
+var u2rSet : String;
+var u2rTime : int;
+var u2SPos : Vector3;
+var u2SRot : Vector3;
+
+var ammoTest : float;
 
 var shot : Transform;
+
+public class ReloadSound 
+{
+	var Sound : AudioClip;
+	var animTime : float;
+}
+
+public class ReloadSet
+{
+	var Name : String;
+	var Sounds : List.<ReloadSound>;
+}
+
+
+var reloadList : List.<ReloadSet>;
 
 public class GunItem
 {
@@ -209,14 +385,19 @@ public class GunItem
 	var Damage : float;
 	var Reserve : int;
 	var ReserveMax : int;
-	var Timer : float;
+	var RPM : float;
 	var Pellets : int;
 	var Accuracy : float;
 	var IsAutomatic : boolean;
 	var SingleReload : boolean;
-	var muzzleflash : Transform;
 	var audio : AudioClip;
-	var texture : Texture2D;
+	var aimReduce : float;
+	var scoped : boolean;
+	var fovZoom : int;
+	var reloadSet : String;
+	var rTime : int;
+	var sPos : Vector3;
+	var sRot : Vector3;
 }
 
 var aimTransform : Transform;
@@ -233,504 +414,1354 @@ public var FireArms : GunItem[];
 public var AimTowards : AimMove[];
 
 function Awake () {
+	spinnerhost = GameObject.Find("Spinners").transform;
+	uiRoundText = gameObject.Find("RoundText").GetComponent.<UI.Text>();
+	GameObject.Find("Host").GetComponent.<GameHost>().FindPlayers();
 	PerkMachines = GameObject.FindGameObjectsWithTag("PerkMachine"); 
 	gameObject.active = false;
 	gameObject.active = true;
-	Round = 1;
-	zedcount = 6;
-	coolingDown = true;
 	spawner = GameObject.FindGameObjectsWithTag("Spawner");
+	animator3["Aim" + uName].layer = 1;
+}
+
+function Start () {
+	gamecontroller = GameObject.Find("GameController");
+	equipped = "gun";
+	animator1.PlayQueued("Equip" + uName);
+	timer = (0 - 60.0 / uRPM - animator1["Equip" + uName + ""].length);
 }
 
 function Update () {
-	if(PerkList.Contains(4))
+	if(Input.GetKeyDown(KeyCode.Escape)){
+		paused = !paused;
+	}
+	if(paused){
+		quittext.active = true;
+		AudioListener.pause = true;
+	}
+	else
 	{
-		if(uName != "" || uName != null)
+		quittext.active = false;
+		AudioListener.pause = false;
+	}
+	if(!paused){
+		if(oldPoints != Points){
+			if(oldPoints > Points){
+				uiCarrier.SendMessage("BoughtItem", Points - oldPoints, SendMessageOptions.DontRequireReceiver);
+				oldPoints = Points;
+			}
+		}
+		speedTest = animator1["Reload" + uName + ""].speed;
+		if(animator1.IsPlaying("Reload" + uName + ""))
 		{
-			gunAudioSource.pitch = 1.33;
-			animator["Fire" + uName].speed = 1.33;
-			if(intendedPellets == 1)
+			speedTime += Time.deltaTime;
+		}
+		aimPause += Time.deltaTime;
+		if(uReserve > uReserveMax && reloading == false)
+		{
+			uReserve = uReserveMax;
+		}
+		if(u2Reserve > u2ReserveMax && reloading == false)
+		{
+			u2Reserve = u2ReserveMax;
+		}
+		ammoTest = uAmmo / uMaxClip;
+		if(gunequipped == 1 && uAmmo == 0 && equipped == "gun" && uReserve != 0)
+		{
+			uiNotification.gameObject.active = true;
+			uiNotification.text = "R to Reload";
+		}
+		else if(gunequipped == 2 && u2Ammo == 0 && equipped == "gun" && u2Reserve != 0)
+		{
+			uiNotification.gameObject.active = true;
+			uiNotification.text = "R to Reload";
+		}
+		else if(gunequipped == 1 && uAmmo / uMaxClip == 0 && equipped == "gun" && uReserve == 0)
+		{
+			uiNotification.gameObject.active = true;
+			uiNotification.text = "No Ammo";
+		}
+		else if(gunequipped == 2 && u2Ammo / u2MaxClip == 0 && equipped == "gun" && u2Reserve == 0)
+		{
+			uiNotification.gameObject.active = true;
+			uiNotification.text = "No Ammo";
+		}
+		else
+		{
+			uiNotification.gameObject.active = false;
+		}
+		if(PerkList.Count >= 1)
+		{
+			uiPerk1.gameObject.active = true;
+			uiPerk1.SendMessage("GunImage", PerkList[0], SendMessageOptions.DontRequireReceiver);
+			if(PerkList.Count >= 2)
 			{
-				uPellets = 2;
+				uiPerk2.gameObject.active = true;
+				uiPerk2.SendMessage("GunImage", PerkList[1], SendMessageOptions.DontRequireReceiver);
+				if(PerkList.Count >= 3)
+				{
+					uiPerk3.gameObject.active = true;
+					uiPerk3.SendMessage("GunImage", PerkList[2], SendMessageOptions.DontRequireReceiver);
+					if(PerkList.Count >= 4)
+					{
+						uiPerk4.gameObject.active = true;
+						uiPerk4.SendMessage("GunImage", PerkList[3], SendMessageOptions.DontRequireReceiver);
+					}
+					else
+					{
+						uiPerk4.gameObject.active = false;
+					}
+				}
+				else
+				{
+					uiPerk3.gameObject.active = false;
+					uiPerk4.gameObject.active = false;
+				}
 			}
 			else
 			{
-				uPellets = intendedPellets;
+				uiPerk2.gameObject.active = false;
+				uiPerk3.gameObject.active = false;
+				uiPerk4.gameObject.active = false;
 			}
 		}
-	}
-	else
-	{
-		if(uName != "" || uName != null)
+		else
 		{
-			animator["Fire" + uName].speed = 1;
-			if(intendedPellets == 1)
+			uiPerk1.gameObject.active = false;
+			uiPerk2.gameObject.active = false;
+			uiPerk3.gameObject.active = false;
+			uiPerk4.gameObject.active = false;
+		}
+		if(equipped == "gun" && !Input.GetButton("Fire2"))
+		{
+			accLeft.gameObject.active = true;
+			accRight.gameObject.active = true;
+			accDown.gameObject.active = true;
+			accUp.gameObject.active = true;
+			accLeft.rectTransform.localPosition.x = -realaccuracy * 500 - 20;
+			accRight.rectTransform.localPosition.x = realaccuracy * 500 + 20;
+			accDown.rectTransform.localPosition.y = -realaccuracy * 500 - 20;
+			accUp.rectTransform.localPosition.y = realaccuracy * 500 + 20;
+			meleeIcon.gameObject.active = false;
+			if(cam.fieldOfView != 60)
 			{
-				uPellets = 1;
+				cam.fieldOfView += 1;
+				cam2.fieldOfView += 1;
+				cam3.fieldOfView += 1;
+			}
+			else if(cam.fieldOfView >= 60)
+			{
+				cam.fieldOfView = 60;
+				cam2.fieldOfView = 60;
+				cam3.fieldOfView = 60;
 			}
 		}
-	}
-	if(PerkList.Contains(3))
-	{
-		if(uName != "" || uName != null)
+		else if(equipped == "melee")
 		{
-			animator["Reload" + uName].speed = 1.75;
-			if(uSingleReload == true)
+			accLeft.gameObject.active = false;
+			accRight.gameObject.active = false;
+			accDown.gameObject.active = false;
+			accUp.gameObject.active = false;
+			meleeIcon.gameObject.active = true;
+		}
+		else if(equipped == "grenade")
+		{
+			accLeft.gameObject.active = false;
+			accRight.gameObject.active = false;
+			accDown.gameObject.active = false;
+			accUp.gameObject.active = false;
+			meleeIcon.gameObject.active = true;
+		}
+		uiSlot1.SendMessage("GunImage", uMID, SendMessageOptions.DontRequireReceiver);
+		uiSlot2.SendMessage("GunImage", uID, SendMessageOptions.DontRequireReceiver);
+		if(guns == 2)
+		{
+			uiSlot2two.gameObject.active = true;
+			uiSlot2two.SendMessage("GunImage", u2ID, SendMessageOptions.DontRequireReceiver);
+		}
+		else
+		{
+			uiSlot2two.gameObject.active = false;
+		}
+		if(GrenadeList.Count >= 1)
+		{
+			uiSlot31.gameObject.active = true;
+			uiSlot31.SendMessage("GunImage", GrenadeList[0], SendMessageOptions.DontRequireReceiver);
+			if(GrenadeList.Count >= 2)
 			{
-				animator["Reload" + uName + "2"].speed = 2;
-				animator["Reload" + uName + "3"].speed = 1.75;
-			}
-		}
-	}
-	else if(!PerkList.Contains(3))
-	{
-		if(uName != "" || uName != null)
-		{
-			animator["Reload" + uName].speed = 1;
-			if(uSingleReload == true)
-			{
-				animator["Reload" + uName + "2"].speed = 1;
-				animator["Reload" + uName + "3"].speed = 1;
-			}
-		}
-	}
-	if(PerkList.Contains(1))
-	{
-		potentialInvulnerable = true;
-	}
-	else
-	{
-		potentialInvulnerable = false;
-	}
-	if(PerkList.Contains(2))
-	{
-		DamageResist = 2;
-	}
-	else
-	{
-		DamageResist = 1;
-	}
-	invintimer += Time.deltaTime;
-	regenTimer += Time.deltaTime;
-	if(canSprint == false)
-	{
-		controller.SendMessage("CantSprint", SendMessageOptions.DontRequireReceiver);
-	}
-	if(!Input.GetKey(KeyCode.LeftShift) && Stamina != 10)
-	{
-		if(regenTimer >= 0.05)
-		{
-			Stamina += 0.2;
-			regenTimer = 0;
-		}
-	}
-	if(Stamina > 10)
-	{
-		Stamina = 10;
-	}
-	if(Stamina > 0)
-	{
-		canSprint = true;
-		controller.SendMessage("CanSprint", SendMessageOptions.DontRequireReceiver);
-	}
-	if(uAmmo > uMaxClip)
-	{
-		uAmmo = uMaxClip;
-	}
-	if(coolingDown == true)
-	{
-		roundTimer += Time.deltaTime;
-		textColor.normal.textColor.a += Time.deltaTime;
-		if(roundTimer >= 1)
-		{
-			coolDown -= 1;
-			roundTimer = 0;
-			textColor.normal.textColor.a = 0;
-		}
-		if(coolDown == 0)
-		{
-			for(var i : GameObject in spawner)
-			{
-				i.SendMessage("NewRound", zedcount, SendMessageOptions.DontRequireReceiver);
-			}
-			coolingDown = false;
-		}
-	}
-	if(zedcount == 0)
-	{
-		coolDown = 5;
-		Round += 1;
-		zedcount = 6 + (3 * Round);
-		coolingDown = true;
-	}
-	healthtimer += Time.deltaTime;
-	if(Health < 100 && Health > 0)
-	{
-		if(healthtimer >= 0.2)
-		{
-			Health += 1;
-			healthtimer = 0;
-		}
-	}
-	if(Health <= 0 && !PerkList.Contains(1))
-	{
-		if(dead == false)
-		{
-			healthtimer = 0;
-			textColor.normal.textColor.a = 0;
-		}
-		dead = true;
-		Health = 0;
-		controller.SendMessage("Dead", SendMessageOptions.DontRequireReceiver);
-		animator.gameObject.active = false;
-		PerkList.Clear();
-		
-	}
-	else if(Health <= 0 && PerkList.Contains(1))
-	{
-		invulnerable = true;
-		Health = 1;
-		PerkList.Clear();
-		invincount = 5;
-		for(var i : GameObject in PerkMachines)
-		{
-			i.SendMessage("CanUse", SendMessageOptions.DontRequireReceiver);
-		}
-		invincible.gameObject.active = true;
-		invintimer = 0;
-	}
-	if(invulnerable == true)
-	{
-		textColor.normal.textColor.a += Time.deltaTime;
-		if(invincount == 0)
-		{
-			invulnerable = false;
-			invincible.gameObject.active = false;
-		}
-		if(invintimer >= 1)
-		{
-			invincount -= 1;
-			invintimer = 0;
-			textColor.normal.textColor.a = 0;
-		}
-	}
-	if(dead == true)
-	{
-		textColor.normal.textColor.a += Time.deltaTime;
-	}
-	labelHeight2 = Screen.height / 80;
-	labelHeight = Screen.height - (Screen.height / 14);
-	labelWidth = 0 + (Screen.width / 80);
-	labelWidth2 = Screen.width - (Screen.width / 8);
-	screenWidth = Screen.width;
-	screenHeight = Screen.height;
-	timer += Time.deltaTime;
-	if(Input.GetKeyDown(KeyCode.P))
-	{
-		phoneEquipped = !phoneEquipped;
-		if(phoneEquipped == true)
-		{
-			animator["EquipPhone"].layer = 1;
-			animator.Play("EquipPhone");
-		}
-		if(phoneEquipped == false)
-		{
-			animator["DequipPhone"].layer = 1;
-			animator.Play("DequipPhone");
-		}
-	}
-	if(Input.GetKeyDown(KeyCode.Q))
-	{
-		if(phoneEquipped == true)
-		{
-			StartCoroutine("PickSong");
-		}
-	}
-	if(Input.GetKeyDown(KeyCode.E))
-	{
-		if(phoneEquipped == true)
-		{
-			if(isPlaying == false)
-			{
-				for (var song : Song in Songs)
+				uiSlot32.gameObject.active = true;
+				uiSlot32.SendMessage("GunImage", GrenadeList[1], SendMessageOptions.DontRequireReceiver);
+				if(GrenadeList.Count >= 3)
 				{
-					if(song.ID == songSelected)
+					uiSlot33.gameObject.active = true;
+					uiSlot33.SendMessage("GunImage", GrenadeList[2], SendMessageOptions.DontRequireReceiver);
+					if(GrenadeList.Count >= 4)
 					{
-						isPlaying = true;
-						musicAudioSource.Play();
-						gunAudioSource.volume = 0.25;
-						if(song.Effect == 1)
-						{
-							playerController.SendMessage("SpeedUp", speedMulti);
-						}
-						if(song.Effect == 2)
-						{
-							damageMulti = song.EffectMulti;
-						}
-						if(song.Effect == 3)
-						{
-							if(uPellets == 1)
-							{
-								accuracyMulti = song.EffectMulti;
-							}
-						}
-						if(song.Effect == 4)
-						{
-							meleeSpeedMulti = song.EffectMulti;
-						}
-						if(song.Effect2 == 1)
-						{
-							playerController.SendMessage("SpeedUp", speedMulti);
-						}
-						if(song.Effect2 == 2)
-						{
-							damageMulti = song.Effect2Multi;
-						}
-						if(song.Effect2 == 3)
-						{
-							if(uPellets == 1)
-							{
-								accuracyMulti = song.Effect2Multi;
-							}
-						}
-						if(song.Effect2 == 4)
-						{
-							meleeSpeedMulti = song.Effect2Multi;
-						}
-						if(!musicAudioSource.isPlaying)
-						{
-							musicAudioSource.Play();
-						}
+						uiSlot34.gameObject.active = true;
+						uiSlot34.SendMessage("GunImage", GrenadeList[3], SendMessageOptions.DontRequireReceiver);
+					}
+					else
+					{
+						uiSlot34.gameObject.active = false;
+					}
+				}
+				else
+				{
+					uiSlot33.gameObject.active = false;
+					uiSlot34.gameObject.active = false;
+				}
+			}
+			else
+			{
+				uiSlot32.gameObject.active = false;
+				uiSlot33.gameObject.active = false;
+				uiSlot34.gameObject.active = false;
+			}
+		}
+		if(equipped == "grenade")
+		{
+			uiSlot31.SendMessage("Amount", GrenadeList.Count, SendMessageOptions.DontRequireReceiver);
+			uiSlot32.SendMessage("Amount", GrenadeList.Count, SendMessageOptions.DontRequireReceiver);
+			uiSlot33.SendMessage("Amount", GrenadeList.Count, SendMessageOptions.DontRequireReceiver);
+			uiSlot34.SendMessage("Amount", GrenadeList.Count, SendMessageOptions.DontRequireReceiver);
+			if(grenadeEquipped == "1")
+			{
+				grenadeS1.gameObject.active = true;
+				grenadeS2.gameObject.active = false;
+				grenadeS3.gameObject.active = false;
+				grenadeS4.gameObject.active = false;
+			}
+			else if(grenadeEquipped == "2")
+			{
+				grenadeS1.gameObject.active = false;
+				grenadeS2.gameObject.active = true;
+				grenadeS3.gameObject.active = false;
+				grenadeS4.gameObject.active = false;
+			}
+			else if(grenadeEquipped == "3")
+			{
+				grenadeS1.gameObject.active = false;
+				grenadeS2.gameObject.active = false;
+				grenadeS3.gameObject.active = true;
+				grenadeS4.gameObject.active = false;
+			}
+			else if(grenadeEquipped == "4")
+			{
+				grenadeS1.gameObject.active = false;
+				grenadeS2.gameObject.active = false;
+				grenadeS3.gameObject.active = false;
+				grenadeS4.gameObject.active = true;
+			}
+		}
+		else if(equipped != "grenade")
+		{
+			grenadeS1.gameObject.active = false;
+			grenadeS2.gameObject.active = false;
+			grenadeS3.gameObject.active = false;
+			grenadeS4.gameObject.active = false;
+		}
+		if(slot4ID != 0)
+		{
+			uiSlot4.gameObject.active = true;
+			uiSlot4.SendMessage("GunImage", slot4ID, SendMessageOptions.DontRequireReceiver);
+		}
+		else
+		{
+			uiSlot4.gameObject.active = false;
+		}
+		if(equipped == "Slot4")
+		{
+			uiSlot42.gameObject.active = true;
+			uiSlot4.SendMessage("GunImage", slot4ID, SendMessageOptions.DontRequireReceiver);
+			uiSlot42.SendMessage("GunImage", slot4Type, SendMessageOptions.DontRequireReceiver);
+			uiSlot42.SendMessage("GunImageSet", slot4ID, SendMessageOptions.DontRequireReceiver);
+		}
+		else
+		{
+			uiSlot42.gameObject.active = false;
+		}
+		if(Health != 0)
+		{
+			var colored : float = ((100 - Health) * 2.55) / 255;
+			damageIndicator.GetComponent.<UI.Image>().color = new Color(1f, 1f, 1f, colored);
+		}
+		else{
+			damageIndicator.GetComponent.<UI.Image>().color.a = 1f;
+		}
+		points.text = Points + "";
+		healthCounter.text = Health + "";
+		if(equipped == "gun" && gunequipped == 1)
+		{
+			ammoCounter.text = uAmmo + "/" + uReserve;
+		}
+		else if(equipped == "gun" && gunequipped == 2)
+		{
+			ammoCounter.text = u2Ammo + "/" + u2Reserve;
+		}
+		else if(equipped == "Slot4")
+		{
+			ammoCounter.text = slot4Ammo + "/" + slot4MaxAmmo;
+		}
+		else if(equipped == "melee" || equipped == "grenade" || animator1.IsPlaying("Reload" + uName))
+		{
+			ammoCounter.text = "N/A";
+		}
+		fireCool += Time.deltaTime;
+		if(fireaccuracyinc > 0)
+		{
+			if(fireCool >= 0.1)
+			{
+				fireaccuracyinc -= (Time.deltaTime / 15);
+			}
+		}
+		if(fireaccuracyinc < 0)
+		{
+			fireaccuracyinc = 0;
+		}
+		if(fireaccuracyinc >= uAccuracy * 2)
+		{
+			fireaccuracyinc = uAccuracy * 2;
+		}
+		if(gunequipped == 1)
+		{
+			realaccuracy = (fireaccuracyinc + uAccuracy - reducingAim) * (accuracyMulti / statusEffectMulti);
+		}
+		else if(gunequipped == 2)
+		{
+			realaccuracy = (fireaccuracyinc + u2Accuracy - reducingAim) * (accuracyMulti / statusEffectMulti);
+		}
+		if(slot4Ammo != slot4MaxAmmo)
+		{
+			slot4ChargeTime += Time.deltaTime;
+			if(slot4ChargeTime >= 0.2)
+			{
+				slot4ChargeTime = 0;
+				slot4Ammo += 1;
+			}
+		}
+		if(PerkList.Contains(4))
+		{
+			if(uName != "" || uName != null)
+			{
+				if(animator1.IsPlaying("Fire" + uName))
+				{
+					gunAudioSource.pitch = 1.2;
+				}
+				else
+				{
+					gunAudioSource.pitch = 1;
+				}
+				if(animator1.IsPlaying("Fire" + uName))
+				{
+					animator1["Fire" + uName + ""].speed = 1.2;
+				}
+				if(intendedPellets == 1)
+				{
+					uPellets = 2;
+				}
+				else
+				{
+					uPellets = intendedPellets;
+				}
+			}
+			if(guns == 2)
+			{
+				if(u2Name != "" || u2Name != null)
+				{
+					if(animator1.IsPlaying("Fire" + u2Name))
+					{
+						gunAudioSource.pitch = 1.2;
+					}
+					else
+					{
+						gunAudioSource.pitch = 1;
+					}
+					if(animator1.IsPlaying("Fire" + u2Name))
+					{	
+						animator1["Fire" + u2Name].speed = 1.2;
+					}
+					if(intendedPellets2 == 1)
+					{
+						u2Pellets = 2;
+					}
+					else
+					{
+						u2Pellets = intendedPellets2;
 					}
 				}
 			}
-			else if(isPlaying == true)
+		}
+		else
+		{
+			if(uName != "" || uName != null)
 			{
-				isPlaying = false;
-				musicAudioSource.Stop();
-				gunAudioSource.volume = 1;
-				playerController.SendMessage("SpeedDown");
+				animator1["Fire" + uName + ""].speed = 1;
+				if(intendedPellets == 1)
+				{
+					uPellets = 1;
+				}
+			}
+			if(guns == 2)
+			{
+				if(u2Name != "" || u2Name != null)
+				{
+					animator1["Fire" + u2Name].speed = 1;
+					if(intendedPellets2 == 1)
+					{
+						u2Pellets = 1;
+					}
+				}
 			}
 		}
-	}
-	if(!Input.GetButton("Horizontal") && !Input.GetButton("Vertical"))
-	{
-		animator2["PlayerMove"].speed = 0;
-	}
-	if(Input.GetButton("Horizontal") || Input.GetButton("Vertical") && !Input.GetKey(KeyCode.LeftShift))
-	{
-		animator2.Play("PlayerMove");
-		animator2["PlayerMove"].speed = 1;
-	}
-	if(Input.GetButton("Horizontal") || Input.GetButton("Vertical") && Input.GetKey(KeyCode.LeftShift) && canSprint == true)
-	{
-		animator2.Play("PlayerMove");
-		animator2["PlayerMove"].speed = 1.25;
-		if(regenTimer >= 0.05)
+		if(animator1.IsPlaying("Reload" + uName))
 		{
-			Stamina -= 0.1;
-			regenTimer = 0;
+			if(PerkList.Contains(3))
+			{
+				animator1["Reload" + uName].speed = 1.5;
+				gunAudioSource.pitch = 1.5;
+			}
+			else
+			{
+				animator1["Reload" + uName].speed = 1;
+				gunAudioSource.pitch = 1;
+			}
 		}
-		if(Stamina <= 0.1)
+		else if(animator1.IsPlaying("Reload" + uName + "2"))
 		{
-			Stamina = -5;
-			canSprint = false;	
+			if(PerkList.Contains(3))
+			{
+				animator1["Reload" + uName + "2"].speed = 1.5;
+				gunAudioSource.pitch = 1.5;
+			}
+			else
+			{
+				animator1["Reload" + uName + "2"].speed = 1;
+				gunAudioSource.pitch = 1;
+			}
 		}
-	}
-	if(Input.GetButton("Horizontal") || Input.GetButton("Vertical") && Input.GetKey(KeyCode.LeftShift) && canSprint == false)
-	{
-		animator2.Play("PlayerMove");
-		animator2["PlayerMove"].speed = 1;
-	}
-    if(Input.GetKeyDown(KeyCode.F))
-    {
-        flashlight.gameObject.active = !flashlight.gameObject.active;
-    }
-    if(Input.GetKeyDown(KeyCode.Alpha1))
-    {
-    	if(uMName != "" && equipped != "melee")
-    	{
-    		if(equipped == "gun")
-    		{
-    			animator.Play("Dequip" + uName);
-    		}
-    		if(equipped == "grenade")
-    		{
-    			animator.PlayQueued("DequipGrenadeLauncher");
-    		}
-    		equipped = "melee";
-    		if(umType == 0)
-    		{
-    			uMTransform.gameObject.active = true;
-    			animator.PlayQueued("EquipOneHanded");
-    			timer -= (uTimer - animator["EquipOneHanded"].length);
-    		}
-    		if(umType == 1)
-    		{
-    			uMTransform.gameObject.active = true;
-    			animator.PlayQueued("EquipTwoHanded");
-    			timer -= (uTimer - animator["EquipTwoHanded"].length);
-    		}
-    	}
-    }
-    if(Input.GetKeyDown(KeyCode.Alpha2))
-    {
-    	if(uName != "" && equipped != "gun")
-    	{
-    		if(equipped == "melee" && umType == 0)
-    		{
-    			animator.PlayQueued("DequipOneHanded");
-    		}
-    		if(equipped == "melee" && umType == 1)
-    		{
-    			animator.PlayQueued("DequipTwoHanded");
-    		}
-    		if(equipped == "grenade")
-    		{
-    			animator.PlayQueued("DequipGrenadeLauncher");
-    		}
-    		equipped = "gun";
-    		animator.PlayQueued("Equip" + uName);
-    		timer -= (uTimer - animator["Equip" + uName].length);
-    	}
-    }
-    if(Input.GetKeyDown(KeyCode.Alpha3))
-    {
-    	if(equipped == "melee" && umType == 0)
+		else if(animator1.IsPlaying("Reload" + uName + "3"))
 		{
-			animator.PlayQueued("DequipOneHanded");
+			if(PerkList.Contains(3))
+			{
+				animator1["Reload" + uName + "3"].speed = 1.5;
+				gunAudioSource.pitch = 1.5;
+			}
+			else
+			{
+				animator1["Reload" + uName + "3"].speed = 1;
+				gunAudioSource.pitch = 1;
+			}
 		}
-		if(equipped == "melee" && umType == 1)
+		else if(animator1.IsPlaying("Reload" + u2Name))
 		{
-			animator.PlayQueued("DequipTwoHanded");
+			if(PerkList.Contains(3))
+			{
+				animator1["Reload" + u2Name].speed = 1.5;
+				gunAudioSource.pitch = 1.5;
+			}
+			else
+			{
+				animator1["Reload" + u2Name].speed = 1;
+				gunAudioSource.pitch = 1;
+			}
 		}
-		if(equipped == "gun")
+		else if(animator1.IsPlaying("Reload" + u2Name + "2"))
 		{
-			animator.Play("Dequip" + uName);
+			if(PerkList.Contains(3))
+			{
+				animator1["Reload" + u2Name + "2"].speed = 1.5;
+				gunAudioSource.pitch = 1.5;
+			}
+			else
+			{
+				animator1["Reload" + u2Name + "2"].speed = 1;
+				gunAudioSource.pitch = 1;
+			}
 		}
-		equipped = "grenade";
-    	animator.PlayQueued("EquipGrenadeLauncher");
-    	timer -= (uTimer - animator["EquipGrenadeLauncher"].length);
-    }
-    var ahit : RaycastHit;
-	if (Physics.Raycast (aimer.position, aimer.TransformDirection (Vector3.forward), ahit, Mathf.Infinity, layerMask))
-	{
-		if(Input.GetKeyDown(KeyCode.Mouse0))
+		else if(animator1.IsPlaying("Reload" + u2Name + "3"))
 		{
-			Distance = ahit.distance;
-			Debug.Log("I'm aiming at " + ahit.transform);
-			if(equipped == "melee" && Health != 0)
+			if(PerkList.Contains(3))
+			{
+				animator1["Reload" + u2Name + "3"].speed = 1.5;
+				gunAudioSource.pitch = 1.5;
+			}
+			else
+			{
+				animator1["Reload" + u2Name + "3"].speed = 1;
+				gunAudioSource.pitch = 1;
+			}
+		}
+		else
+		{
+			gunAudioSource.pitch = 1;
+		}
+		if(PerkList.Contains(1))
+		{
+			potentialInvulnerable = true;
+		}
+		else
+		{
+			potentialInvulnerable = false;
+		}
+		if(PerkList.Contains(2))
+		{
+			DamageResist = 2;
+		}
+		else
+		{
+			DamageResist = 1;
+		}
+		invintimer += Time.deltaTime;
+		regenTimer += Time.deltaTime;
+		if(canSprint == false)
+		{
+			if(controller != null)
+			{
+				controller.SendMessage("CantSprint", SendMessageOptions.DontRequireReceiver);
+			}
+		}
+		if(!Input.GetKey(KeyCode.LeftShift) && Stamina != 10)
+		{
+			if(regenTimer >= 0.05)
+			{
+				Stamina += 0.2;
+				regenTimer = 0;
+			}
+		}
+		if(Stamina > 10)
+		{
+			Stamina = 10;
+		}
+		if(Stamina > 0)
+		{
+			canSprint = true;
+			if(controller != null)
+			{
+				controller.SendMessage("CanSprint", SendMessageOptions.DontRequireReceiver);
+			}
+		}
+		if(uAmmo > uMaxClip)
+		{
+			uAmmo = uMaxClip;
+		}
+		if(coolingDown == true)
+		{
+			waveText.text = "Wave " + Round + " Beginning in " + coolDown + "";
+			waveText.color.a += Time.deltaTime;
+			roundTimer += Time.deltaTime;
+			textColor.normal.textColor.a += Time.deltaTime;
+			if(roundTimer >= 1)
+			{
+				coolDown -= 1;
+				roundTimer = 0;
+				textColor.normal.textColor.a = 0;
+				waveText.color.a = 0;
+			}
+			if(coolDown == 0){
+				uiRoundText.text = "" + Round;
+				roundTimer = 0;
+				textColor.normal.textColor.a = 0;
+				waveText.color.a = 0;
+				coolingDown = false;
+			}
+		}
+		healthtimer += Time.deltaTime;
+		healthcooldowntimer += Time.deltaTime;
+		if(healthcooldowntimer >= 5)
+		{
+			if(Health < 100 && Health > 0)
+			{
+				if(healthtimer >= 0.1)
+				{
+					Health += 1;
+					healthtimer = 0;
+				}
+			}
+		}
+		if(Health <= 0 && !PerkList.Contains(1) && dead == false)
+		{
+			if(dead == false)
+			{
+				healthtimer = 0;
+				textColor.normal.textColor.a = 0;
+			}
+			deadtimer += Time.deltaTime;
+			dead = true;
+			Health = 0;
+			if(gamecontroller != null)
+			{
+				gamecontroller.SendMessage("Dead", Round, SendMessageOptions.DontRequireReceiver);
+			}
+			transform.SendMessage("Dead", SendMessageOptions.DontRequireReceiver);
+			if(controller != null)
+			{
+				controller.SendMessage("Dead", SendMessageOptions.DontRequireReceiver);
+			}
+			animator1.gameObject.active = false;
+			PerkList.Clear();
+			if(deadtimer >= 3)
+			{
+				Application.LoadLevel("Menu");
+			}
+			
+		}
+		else if(Health <= 0 && PerkList.Contains(1))
+		{
+			invulnerable = true;
+			Health = 1;
+			PerkList.Clear();
+			invincount = 5;
+			for(var i : GameObject in PerkMachines)
+			{
+				i.SendMessage("CanUse", SendMessageOptions.DontRequireReceiver);
+			}
+			invincible.gameObject.active = true;
+			invintimer = 0;
+		}
+		if(invulnerable == true)
+		{
+			textColor.normal.textColor.a += Time.deltaTime;
+			if(invincount == 0)
+			{
+				invulnerable = false;
+				invincible.gameObject.active = false;
+			}
+			if(invintimer >= 1)
+			{
+				invincount -= 1;
+				invintimer = 0;
+				textColor.normal.textColor.a = 0;
+			}
+		}
+		if(dead == true)
+		{
+			textColor.normal.textColor.a += Time.deltaTime;
+		}
+		timer += Time.deltaTime;
+		if(Input.GetKeyDown(KeyCode.P))
+		{
+			phoneEquipped = !phoneEquipped;
+			if(phoneEquipped == true)
+			{
+				animator1["EquipPhone"].layer = 1;
+				animator1.Play("EquipPhone");
+			}
+			if(phoneEquipped == false)
+			{
+				animator1["DequipPhone"].layer = 1;
+				animator1.Play("DequipPhone");
+			}
+		}
+		if(Input.GetKeyDown(KeyCode.Q))
+		{
+			if(phoneEquipped == true)
+			{
+				StartCoroutine("PickSong");
+			}
+		}
+		if(isPlaying == true && !musicAudioSource.isPlaying)
+		{
+			phonetimed += Time.deltaTime;
+			musicAudioSource.Play();
+			if(phonetimed >= 75 && phonetimed < 125)
+			{
+				statusEffectMulti = 0.5;
+				statusText.gameObject.active = true;
+				statusText.text = "You are getting bored of this song, song effect -50%";
+			}
+			if(phonetimed >= 125)
+			{
+				phonetimed = 125;
+				statusEffectMulti = 0.25;
+				statusText.gameObject.active = true;
+				statusText.text = "Your ears are starting to hurt, song effect -75%";
+			}
+		}
+		else if(isPlaying == false)
+		{
+			statusText.gameObject.active = false;
+			statusEffectMulti = 1;
+			if(phonetimed > 0)
+			{
+				phonetimed -= Time.deltaTime * 2;
+			}
+			else
+			{
+				phonetimed = 0;
+			}
+		}
+		if(Input.GetKeyDown(KeyCode.E))
+		{
+			if(phoneEquipped == true)
+			{
+				if(isPlaying == false)
+				{
+					for (var song : Song in Songs)
+					{
+						if(song.ID == songSelected)
+						{
+							isPlaying = true;
+							musicAudioSource.Play();
+							gunAudioSource.volume = 0.25;
+							if(song.Effect == 1)
+							{
+								playerController.SendMessage("SpeedUp", speedMulti * statusEffectMulti);
+							}
+							if(song.Effect == 2)
+							{
+								damageMulti = song.EffectMulti;
+							}
+							if(song.Effect == 3)
+							{
+								accuracyMulti = song.EffectMulti;
+							}
+							if(song.Effect == 4)
+							{
+								meleeSpeedMulti = song.EffectMulti;
+							}
+							if(song.Effect2 == 1)
+							{
+								playerController.SendMessage("SpeedUp", speedMulti / statusEffectMulti);
+							}
+							if(song.Effect2 == 2)
+							{
+								damageMulti = song.Effect2Multi;
+							}
+							if(song.Effect2 == 3)
+							{
+								accuracyMulti = song.Effect2Multi;
+							}
+							if(song.Effect2 == 4)
+							{
+								meleeSpeedMulti = song.Effect2Multi;
+							}
+							if(!musicAudioSource.isPlaying)
+							{
+								musicAudioSource.Play();
+							}
+						}
+					}
+				}
+				else if(isPlaying == true)
+				{
+					isPlaying = false;
+					musicAudioSource.Stop();
+					accuracyMulti = 1;
+					meleeSpeedMulti = 1;
+					damageMulti = 1;
+					gunAudioSource.volume = 1;
+					playerController.SendMessage("SpeedDown");
+				}
+			}
+		}
+		if(!Input.GetButton("Horizontal") && !Input.GetButton("Vertical") && controller != null)
+		{
+			sprinting = false;
+			controller.SendMessage("NoSprint", SendMessageOptions.DontRequireReceiver);
+			animator2.CrossFade("PlayerIdle");
+		}
+		if(Input.GetButton("Fire2") && controller != null)
+		{
+			sprinting = false;
+			if(controller != null)
+			{
+				controller.SendMessage("NoSprint", SendMessageOptions.DontRequireReceiver);
+			}
+			animator2.CrossFade("PlayerIdle");
+		}
+		if(Input.GetButton("Horizontal") || Input.GetButton("Vertical") && !Input.GetKey(KeyCode.LeftShift) && controller != null)
+		{
+			sprinting = false;
+			animator2.Play("PlayerMove");
+			animator2["PlayerMove"].speed = 1;
+			if(controller != null)
+			{
+				controller.SendMessage("NoSprint", SendMessageOptions.DontRequireReceiver);
+			}
+		}
+		if(!Input.GetButton("Horizontal") && Input.GetButton("Vertical") && Input.GetKey(KeyCode.LeftShift) && canSprint == true && !Input.GetButton("Fire2") && controller != null)
+		{
+			sprinting = true;
+			animator2.Play("PlayerMove");
+			animator2["PlayerMove"].speed = 1.25;
+			controller.SendMessage("Sprint", SendMessageOptions.DontRequireReceiver);
+			if(regenTimer >= 0.05)
+			{
+				Stamina -= 0.1;
+				regenTimer = 0;
+			}
+			if(Stamina <= 0.1)
+			{
+				Stamina = -5;
+				canSprint = false;	
+			}
+		}
+		if(Input.GetKey(KeyCode.LeftShift) && canSprint == false && !Input.GetButton("Fire2") && controller != null)
+		{
+			sprinting = false;
+			controller.SendMessage("NoSprint", SendMessageOptions.DontRequireReceiver);
+			animator2.Play("PlayerMove");
+			animator2["PlayerMove"].speed = 1;
+		}
+		if(sprinting == true)
+		{
+			if(gunequipped == 1)
+			{
+				aimPause = -0.25;
+				aimyThing.localPosition = uSPos;
+				aimyThing.localEulerAngles = uSRot;
+				aimTransform.rotation = Quaternion.RotateTowards(aimTransform.rotation, aimyThing.rotation, 15);
+				aimTransform.position = Vector3.MoveTowards(aimTransform.position, aimyThing.position, 1);
+				//Debug.Log("I'm sprinting.");
+			}
+			else if(gunequipped == 2)
+			{
+				aimPause = -0.5;
+				aimyThing.localPosition = u2SPos;
+				aimyThing.localEulerAngles = u2SRot;
+				aimTransform.rotation = Quaternion.RotateTowards(aimTransform.rotation, aimyThing.rotation, 15);
+				aimTransform.position = Vector3.MoveTowards(aimTransform.position, aimyThing.position, 1);
+				//Debug.Log("I'm sprinting.");
+			}
+		}
+		else if(sprinting == false && !Input.GetButton("Fire2"))
+		{
+			aimyThing.localPosition = Vector3(0, 0, 0);
+			aimyThing.localEulerAngles = Vector3(0, 0, 0);
+			aimTransform.localEulerAngles = Vector3(0, 0, 0);
+			aimTransform.position = Vector3.MoveTowards(aimTransform.position, aimyThing.position, 5);
+			//Debug.Log("I'm sprinting.");
+		}
+	    if(Input.GetKeyDown(KeyCode.F))
+	    {
+	        flashlight.gameObject.active = !flashlight.gameObject.active;
+	    }
+	    if(Input.GetKeyDown(KeyCode.Alpha1))
+	    {
+	    	if(uMName != "" && equipped != "melee")
 	    	{
-	    		if(timer >= 0.1)
+	    		if(equipped == "gun")
 	    		{
-	    			StartCoroutine("SwingMelee");
+	    			if(gunequipped == 1)
+	    			{
+	    				animator1.Play("Dequip" + uName);
+	    			}
+	    			else if(gunequipped == 2)
+	    			{
+	    				animator1.Play("Dequip" + u2Name);
+	    			}
+	    		}
+	    		if(equipped == "grenade")
+	    		{
+	    			animator1.PlayQueued("Dequip" + gName);
+	    		}
+	    		if(equipped == "Slot4")
+				{
+					animator1.Play("Dequip" + slot4Name);
+				}
+				if(equipped == "Slot5")
+				{
+					animator1.Play("Dequip" + slot5name);
+				}
+	    		equipped = "melee";
+	    		if(umType == 0)
+	    		{
+	    			uMTransform.gameObject.active = true;
+	    			animator1.PlayQueued("EquipOneHanded");
+	    			timer = (0 - 60.0 / uRPM - animator1["EquipOneHanded"].length);
+	    		}
+	    		if(umType == 1)
+	    		{
+	    			uMTransform.gameObject.active = true;
+	    			animator1.PlayQueued("EquipTwoHanded");
+	    			timer = (0 - 60.0 / uRPM - animator1["EquipTwoHanded"].length);
 	    		}
 	    	}
-    	}
-	}
-	if(Input.GetKeyDown(KeyCode.Mouse0))
-	{
-    	if(equipped == "gun" && uIsAutomatic == false && Health != 0)
-    	{
-    		if(uAmmo != 0 && timer >= uTimer)
-    		{
-    			timer = (0 - animator["Fire" + uName].length);
-    			animator.Stop("Fire" + uName);
-    			gunAudioSource.clip = uAudio;
-	    		gunAudioSource.Play();
-    			animator.Play("Fire" + uName);
-    			uAmmo -= 1;
-    			for(var i : int = 0; i < uPellets; i++)
+	    }
+	    if(Input.GetKeyDown(KeyCode.Alpha2))
+	    {
+	    	if(uName != "" && equipped != "gun" && !animator1.IsPlaying("Reload" + u2Name) && !animator1.IsPlaying("Reload" + u2Name + "2") && !animator1.IsPlaying("Reload" + u2Name + "3") && !animator1.IsPlaying("Reload" + uName) && !animator1.IsPlaying("Reload" + uName + "2") && !animator1.IsPlaying("Reload" + uName + "3"))
+	    	{
+	    		if(equipped == "melee" && umType == 0)
+	    		{
+	    			animator1.PlayQueued("DequipOneHanded");
+	    		}
+	    		if(equipped == "melee" && umType == 1)
+	    		{
+	    			animator1.PlayQueued("DequipTwoHanded");
+	    		}
+	    		if(equipped == "grenade")
+	    		{
+	    			animator1.PlayQueued("Dequip" + gName);
+	    		}
+	    		if(equipped == "Slot4")
 				{
-					aimer.localRotation.x = Random.Range((-uAccuracy - accuracyMulti), (uAccuracy + accuracyMulti));
-					aimer.localRotation.y = Random.Range((-uAccuracy - accuracyMulti), (uAccuracy + accuracyMulti));
-					var hit : RaycastHit;
-					Physics.Raycast (aimer.position, aimer.TransformDirection (Vector3.forward), hit, Mathf.Infinity, layerMask);
-					hit.transform.SendMessage("Shot", uDamage, SendMessageOptions.DontRequireReceiver);
-					var spark = Instantiate(shot, hit.point, shot.rotation);
-					spark.gameObject.layer = 11;
+					animator1.Play("Dequip" + slot4Name);
 				}
-    		}
-    	}
-    	if(equipped == "grenade" && isLoaded == true && timer >= 0)
-    	{
-    		timer = 0 - animator["FireGrenadeLauncher"].length;
-    		animator.Play("FireGrenadeLauncher");
-    		var gclone = Instantiate(grenadeProj, transform.position, transform.rotation);
-    		gclone.gameObject.active = true;
-    		gclone.velocity = transform.TransformDirection(Vector3.forward * 20);
-    		gclone.SendMessage("Grenade", GrenadeList[GrenadeList.Count - 1], SendMessageOptions.DontRequireReceiver);
-    		GrenadeList.RemoveAt(GrenadeList.Count - 1);
-    		isLoaded = false;
-    	}
-	}
-	if(equipped == "grenade" && isLoaded == false && GrenadeList.Count != 0)
-	{
-		if(timer >= 0.1)
-		{
-			animator.PlayQueued("ReloadGrenadeLauncher");
-			isLoaded = true;
-			timer = 0 - animator["ReloadGrenadeLauncher"].length;
-		}
-	}
-	if(Input.GetKey(KeyCode.Mouse0))
-	{
-    	if(equipped == "gun" && uIsAutomatic == true && Health != 0)
-    	{
-    		if(uAmmo != 0 && timer >= uTimer)
-    		{
-    			timer = (0 - animator["Fire" + uName].length);
-    			animator.Stop("Fire" + uName);
-    			gunAudioSource.clip = uAudio;
-    			gunAudioSource.Play();
-    			animator.Play("Fire" + uName);
-    			uAmmo -= 1;
-    			for(var ai : int = 0; ai < uPellets; ai++)
+				if(equipped == "Slot5")
 				{
-					aimer.localRotation.x = Random.Range((-uAccuracy - accuracyMulti), (uAccuracy + accuracyMulti));
-					aimer.localRotation.y = Random.Range((-uAccuracy - accuracyMulti), (uAccuracy + accuracyMulti));
-					var hit2 : RaycastHit;
-					Physics.Raycast (aimer.position, aimer.TransformDirection (Vector3.forward), hit2, Mathf.Infinity, layerMask);
-					hit2.transform.SendMessage("Shot", uDamage, SendMessageOptions.DontRequireReceiver);
-					var spark2 = Instantiate(shot, hit2.point, shot.rotation);
-					spark2.gameObject.layer = 11;
+					animator1.Play("Dequip" + slot5name);
+				}
+				gunequipped = 1;
+	    		equipped = "gun";
+	    		animator1.PlayQueued("Equip" + uName);
+	    		timer = (0 - 60.0 / uRPM - animator1["Equip" + uName + ""].length);
+	    		uiSlot2.SendMessage("Equipped", SendMessageOptions.DontRequireReceiver);
+	    		uiSlot2two.SendMessage("Dequipped", SendMessageOptions.DontRequireReceiver);
+	    	}
+	    	else if(equipped == "gun" && guns == 2 && !animator1.IsPlaying("Reload" + uName) && !animator1.IsPlaying("Reload" + uName + "2") && !animator1.IsPlaying("Reload" + uName + "3") && !animator1.IsPlaying("Reload" + u2Name) && !animator1.IsPlaying("Reload" + u2Name + "2") && !animator1.IsPlaying("Reload" + u2Name + "3"))
+	    	{
+	    		gunequipped += 1;
+	    		if(gunequipped > 2)
+	    		{
+	    			gunequipped = 1;
+	    		}
+	    		if(gunequipped == 1)
+	    		{
+	    			equipped = "gun";
+	    			animator1.PlayQueued("Dequip" + u2Name);
+	    			
+	    			animator1.PlayQueued("Equip" + uName);
+	    			timer = (0 - 60.0 / uRPM - (animator1["Equip" + uName + ""].length + animator1["Dequip" + u2Name].length));
+	    			uiSlot2.SendMessage("Equipped", SendMessageOptions.DontRequireReceiver);
+	    			uiSlot2two.SendMessage("Dequipped", SendMessageOptions.DontRequireReceiver);
+	    		}
+	    		else if(gunequipped == 2)
+	    		{
+	    			equipped = "gun";
+	    			animator1.PlayQueued("Dequip" + uName);
+	    			
+	    			animator1.PlayQueued("Equip" + u2Name);
+	    			timer = (0 - 60.0 / u2RPM - (animator1["Equip" + u2Name].length + animator1["Dequip" + uName + ""].length));
+	    			uiSlot2two.SendMessage("Equipped", SendMessageOptions.DontRequireReceiver);
+	    			uiSlot2.SendMessage("Dequipped", SendMessageOptions.DontRequireReceiver);
+	    		}
+	    	}
+	    }
+	    if(Input.GetKeyDown(KeyCode.Alpha3) && GrenadeList.Count != 0)
+	    {
+	    	if(equipped == "melee" && umType == 0)
+			{
+				animator1.PlayQueued("DequipOneHanded");
+				grenadeEquipped = 1;
+			}
+			if(equipped == "melee" && umType == 1)
+			{
+				animator1.PlayQueued("DequipTwoHanded");
+				grenadeEquipped = 1;
+			}
+			if(equipped == "gun")
+			{
+				if(gunequipped == 1)
+				{
+					animator1.PlayQueued("Dequip" + uName);
+					
+				}
+				if(gunequipped == 2)
+				{
+					animator1.PlayQueued("Dequip" + u2Name);
+					
+				}
+				grenadeEquipped = 1;
+			}
+			if(equipped == "Slot4")
+			{
+				animator1.PlayQueued("Dequip" + slot4Name);
+			}
+			if(equipped == "Slot5")
+			{
+				animator1.Play("Dequip" + slot5name);
+			}
+			if(isLoaded == false)
+	    	{
+	    		isLoaded = true;
+	    	}
+	    	if(equipped == "grenade")
+	    	{
+	    		animator1.PlayQueued("Dequip" + gName);
+	    		timer = (0 - animator1["Dequip" + gName].length);
+	    		grenadeEquipped += 1;
+	    		if(grenadeEquipped > 4 || grenadeEquipped > GrenadeList.Count)
+	    		{
+	    			grenadeEquipped = 1;
+	    		}
+	    	}
+	    	equipped = "grenade";
+			gName = Grenades[GrenadeList[grenadeEquipped - 1] - 1].Name;
+			if(gName == "Grenade")
+			{
+				PlayerGrenade.GetComponent.<MeshRenderer>().materials[1].color = Grenades[GrenadeList[grenadeEquipped - 1] - 1].Colour;
+			}
+	    	animator1.PlayQueued("Equip" + gName);
+	    	timer = (0 - animator1["Equip" + gName].length);
+	    }
+	    if(Input.GetKeyDown(KeyCode.Alpha4) && slot4ID != null)
+	    {
+	    	if(equipped != "Slot4")
+	    	{
+		    	if(equipped == "melee" && umType == 0)
+				{
+					animator1.PlayQueued("DequipOneHanded");
+				}
+				if(equipped == "melee" && umType == 1)
+				{
+					animator1.PlayQueued("DequipTwoHanded");
+				}
+				if(equipped == "gun")
+				{
+					if(gunequipped == 1)
+					{
+						animator1.Play("Dequip" + uName);
+						
+					}
+					else
+					{
+						animator1.Play("Dequip" + u2Name);
+						
+					}
+				}
+				if(equipped == "grenade")
+				{
+					animator1.Play("Dequip" + gName);
+				}
+				if(equipped == "Slot4")
+				{
+					animator1.PlayQueued("Dequip" + slot4Name);
+				}
+				if(equipped == "Slot5")
+				{
+					animator1.Play("Dequip" + slot5name);
+				}
+				slot4Type = 1;
+			}
+			else
+			{
+				if(slot4Type != slot4Types)
+				{
+					slot4Type += 1;
+				}
+				else
+				{
+					slot4Type = 1;
+				}
+			}
+			equipped = "Slot4";
+	    	animator1.PlayQueued("Equip" + slot4Name);
+	    	timer = (0 - animator1["Equip" + slot4Name].length);
+	    }
+	    if(Input.GetKeyDown(KeyCode.Alpha5))
+	    {
+	    	if(equipped != "Slot5" && slot5got == true && firing == false && timer >= 0.05)
+	    	{
+	    		if(equipped == "melee" && umType == 0)
+				{
+					animator1.PlayQueued("DequipOneHanded");
+				}
+				if(equipped == "melee" && umType == 1)
+				{
+					animator1.PlayQueued("DequipTwoHanded");
+				}
+				if(equipped == "gun")
+				{
+					if(gunequipped == 1)
+					{
+						animator1.Play("Dequip" + uName);
+						
+					}
+					else
+					{
+						animator1.Play("Dequip" + u2Name);
+						
+					}
+				}
+				if(equipped == "grenade")
+				{
+					animator1.Play("Dequip" + gName);
+				}
+				if(equipped == "Slot4")
+				{
+					animator1.PlayQueued("Dequip" + slot4Name);
+				}
+	    		animator1.PlayQueued("Equip" + slot5name);
+	    		equipped = "Slot5";
+	    		uiSlot2.SendMessage("Dequipped", SendMessageOptions.DontRequireReceiver);
+	    		uiSlot2two.SendMessage("Dequipped", SendMessageOptions.DontRequireReceiver);
+	    	}
+	    }
+	    var mhit : RaycastHit;
+		if (Physics.Raycast (aimer.position, aimer.TransformDirection (Vector3.forward), mhit, 500, layerMask))
+		{
+			if(Input.GetButtonDown("Fire1") && sprinting == false)
+			{
+				Distance = mhit.distance;
+				//Debug.Log("I'm aiming at " + mhit.transform);
+				if(equipped == "melee" && Health != 0)
+		    	{
+		    		if(timer >= 0.1)
+		    		{
+		    			StartCoroutine("SwingMelee");
+		    		}
+		    	}
+	    	}
+		}
+		if(Input.GetButton("Fire1") && sprinting == false)
+		{
+			if(equipped == "Slot4" && Health != 0 && timer >= 0.2)
+			{
+				if(slot4Ammo >= slot4AmmoConsume)
+				{
+					timer = 0;
+					//Debug.Log("Fired Wand");
+					slot4Ammo -= slot4AmmoConsume;
+					animator1.Play("Fire" + slot4Name);
+					var Wclone = Instantiate(slot4Projectiles[slot4Type - 1], transform.position, transform.rotation);
+					Wclone.gameObject.active = true;
+					Wclone.velocity = transform.TransformDirection(Vector3.forward * 25);
+				}
+			}
+	    	if(equipped == "gun" && Health != 0 && timer >= 0.05)
+	    	{
+	    		if(fired == false)
+	    		{
+	    			if(firing == false)
+	    			{
+	    				if(gunequipped == 1 && uAmmo != 0)
+	    				{
+	    					StartCoroutine("FireGun");
+	    					//Debug.Log("Firing Gun.");
+	    				}
+	    				else if(gunequipped == 2 && u2Ammo != 0)
+	    				{
+	    					StartCoroutine("FireGun");
+	    					//Debug.Log("Firing Gun.");
+	    				}
+			    	}
+		    	}
+	    	}
+		}
+		if(!Input.GetButton("Fire1"))
+		{
+			fired = false;
+		}
+		if(equipped == "grenade" && isLoaded == false && GrenadeList.Count != 0)
+		{
+			if(timer >= 0.1)
+			{
+				equipped = "grenade";
+				gName = Grenades[GrenadeList[grenadeEquipped - 1] - 1].Name;
+				if(gName == "Grenade")
+				{
+					PlayerGrenade.GetComponent.<MeshRenderer>().materials[1].color = Grenades[GrenadeList[grenadeEquipped - 1] - 1].Colour;
+				}
+		    	animator1.PlayQueued("Equip" + gName);
+		    	timer = (0 - animator1["Equip" + gName].length);
+				isLoaded = true;
+			}
+		}
+		if(Input.GetButtonDown("Fire1") && sprinting == false)
+		{
+			if(equipped == "grenade" && isLoaded == true && timer >= 0)
+	    	{
+	    		cooktimer = 0;
+	    		grenadeCook = 0;
+	    		grenadeCooking = true;
+	    		animator1.Play("Fire" + gName);
+	    	}
+		}
+		if(Input.GetButton("Fire1") && grenadeCooking == true)
+		{
+			if(Grenades[GrenadeList[grenadeEquipped - 1] - 1].type == 1)
+			{
+				cooktimer += Time.deltaTime;
+				grenadeCook += Time.deltaTime;
+				if(cooktimer >= 1)
+				{
+					cooktimer = 0;
+					meleeIcon.transform.localScale.x = 0.25;
+					meleeIcon.transform.localScale.y = 0.25;
+				}
+				if(grenadeCook >= 5)
+				{
+					grenadeExplode.active = true;
+					Health = 0;
 				}
 			}
 		}
+		if(meleeIcon.transform.localScale.x > 0.1)
+		{
+			meleeIcon.transform.localScale.x -= 0.01;
+			meleeIcon.transform.localScale.y -= 0.01;
+		}
+		if(meleeIcon.transform.localScale.x < 0.1)
+		{
+			meleeIcon.transform.localScale.x = 0.1;
+			meleeIcon.transform.localScale.y = 0.1;
+		}
+		if(!Input.GetButton("Fire1") && grenadeCooking == true)
+		{
+			grenadeCooking = false;
+			timer = 0 - animator1["Fire" + gName + "2"].length;
+			animator1.Play("Fire" + gName + "2");
+			StartCoroutine("GrenadeThrow");
+		}
+		if(Input.GetButtonDown("Fire2") && equipped == "gun" && sprinting == false && aimPause >= 0)
+		{
+			if(gunequipped == 1 && !animator1.IsPlaying("Reload" + uName) && !animator1.IsPlaying("Reload" + uName + "2") && !animator1.IsPlaying("Reload" + uName + "3"))
+			{
+				canSprint = false;
+				animator3["Aim" + uName].layer = 2;
+				animator3["Aim" + uName].speed = 1;
+				animator3.Play("Aim" + uName);
+				reducingAim = uAimReduce;
+				fireaccuracyinc = 0;
+				//Debug.Log("I'm aiming.");
+				accLeft.gameObject.active = false;
+				accRight.gameObject.active = false;
+				accDown.gameObject.active = false;
+				accUp.gameObject.active = false;
+			}
+			else if(gunequipped == 2 && !animator1.IsPlaying("Reload" + u2Name + "2") && !animator1.IsPlaying("Reload" + u2Name) && !animator1.IsPlaying("Reload" + u2Name + "3"))
+			{
+				canSprint = false;
+				animator3["Aim" + u2Name].layer = 2;
+				animator3["Aim" + u2Name].speed = 1;
+				animator3.Play("Aim" + u2Name);
+				reducingAim = u2AimReduce;
+				fireaccuracyinc = 0;
+				//Debug.Log("I'm aiming.");
+				accLeft.gameObject.active = false;
+				accRight.gameObject.active = false;
+				accDown.gameObject.active = false;
+				accUp.gameObject.active = false;
+			}
+		}
+		else if(Input.GetButtonUp("Fire2") && sprinting == false)
+		{
+			canSprint = true;
+			if(gunequipped == 1 && !animator1.IsPlaying("Reload" + uName) && !animator1.IsPlaying("Reload" + uName + "2") && !animator1.IsPlaying("Reload" + uName + "3")){
+				animator3["Aim" + uName].layer = 2;
+				animator3["Aim" + uName].speed = -1;
+				animator3["Aim" + uName].time = animator3["Aim" + uName].length;
+				animator3.Play("Aim" + uName);
+			}
+			else if(gunequipped == 2 && !animator1.IsPlaying("Reload" + u2Name + "2") && !animator1.IsPlaying("Reload" + u2Name) && !animator1.IsPlaying("Reload" + u2Name + "3")){
+				animator3["Aim" + u2Name].layer = 2;
+				animator3["Aim" + u2Name].speed = -1;
+				animator3["Aim" + u2Name].time = animator3["Aim" + u2Name].length;
+				animator3.Play("Aim" + u2Name);
+			}
+			reducingAim = 0;
+		}
+	    if(Input.GetKeyDown(KeyCode.R) && !Input.GetButton("Fire2") && sprinting == false)
+	    {
+	    	if(gunequipped == 1 && !animator1.IsPlaying("Fire" + uName))
+	    	{
+	    		firing = false;
+		    	if(uSingleReload == false && uAmmo != uMaxClip && uReserve != 0)
+		    	{
+		    		animator1.Play("Reload" + uName);
+					timer = (0 - (animator1["Reload" + uName + ""].length / animator1["Reload" + uName + ""].speed));
+		    		if(uAmmo + uReserve >= uMaxClip)
+		    		{
+		    			uReserve -= (uMaxClip - uAmmo);
+		    			uAmmo = uMaxClip;
+		    		}
+		    		else
+		    		{
+		    			uAmmo += uReserve;
+		    			uReserve = 0;
+		    		}
+		    		StartCoroutine("ReloadSounds");
+		    	}
+		    	if(uSingleReload == true && uAmmo != uMaxClip && uReserve != 0)
+		    	{
+		    		if(reloading == false)
+		    		{
+		    			reloading = true;
+		    			if(uRTime != 1)
+		    			{
+		    				uReserve += uAmmo;
+		    				uAmmo = 0;
+		    			}
+			    		animator1.Play("Reload" + uName);
+			    		StartCoroutine("Reload");
+		    		}
+		    	}
+	    	}
+	    	if(gunequipped == 2 && !animator1.IsPlaying("Fire" + u2Name))
+	    	{
+	    		firing = false;
+		    	if(u2SingleReload == false && u2Ammo != u2MaxClip && u2Reserve != 0)
+		    	{
+		    		animator1.Play("Reload" + u2Name);
+					timer = (0 - (animator1["Reload" + u2Name].length / animator1["Reload" + u2Name + ""].speed));
+		    		if(u2Ammo + u2Reserve >= u2MaxClip)
+		    		{
+		    			u2Reserve -= (u2MaxClip - u2Ammo);
+		    			u2Ammo = u2MaxClip;
+		    		}
+		    		else
+		    		{
+		    			u2Ammo += u2Reserve;
+		    			u2Reserve = 0;
+		    		}
+		    		StartCoroutine("ReloadSounds");
+		    	}
+		    	if(u2SingleReload == true && u2Ammo != u2MaxClip && u2Reserve != 0)
+		    	{
+		    		if(reloading == false)
+		    		{
+			    		reloading = true;
+		    			if(u2rTime != 1)
+		    			{
+		    				u2Reserve += u2Ammo;
+		    				u2Ammo = 0;
+		    			}
+			    		animator1.Play("Reload" + u2Name);
+			    		StartCoroutine("Reload");
+		    		}
+		    	}
+	    	}
+	    }
 	}
-    if(Input.GetKeyDown(KeyCode.R))
-    {
-    	if(uSingleReload == false && uAmmo != uMaxClip && uReserve != 0)
-    	{
-    		uMuzzle.gameObject.active = false;
-    		timer = (0 - animator["Reload" + uName].length);
-    		animator.PlayQueued("Reload" + uName);
-    		if(uAmmo + uReserve >= uMaxClip)
-    		{
-    			uReserve -= (uMaxClip - uAmmo);
-    			uAmmo = uMaxClip;
-    		}
-    		else
-    		{
-    			uAmmo += uReserve;
-    			uReserve = 0;
-    		}
-    	}
-    	if(uSingleReload == true && uAmmo != uMaxClip && uReserve != 0)
-    	{
-    		if(reloading == false)
-    		{
-	    		reloading = true;
-	    		animator.PlayQueued("Reload" + uName);
-				timer = 0 - animator["Reload" + uName].length;
-	    		StartCoroutine("Reload");
-    		}
-    	}
-    }
 }
 
-function TakenFrom (rigid : Rigidbody) {
-	prevTake = rigid;
+function Slot5 () {
+	slot5got = true;
+}
+
+function GrenadeThrow () {
+	yield WaitForSeconds(animator1["Fire" + gName + "2"].length);
+	var gclone : Rigidbody;
+	if(Grenades[GrenadeList[grenadeEquipped - 1] - 1].model == null)
+	{
+		gclone = Instantiate(grenadeProj, transform.position, transform.rotation);
+		gclone.SendMessage("Grenade", GrenadeList[GrenadeList.Count - 1], SendMessageOptions.DontRequireReceiver);
+	}
+	else
+	{
+		gclone = Instantiate(Grenades[GrenadeList[grenadeEquipped - 1] - 1].model.GetComponent.<Rigidbody>(), transform.position, transform.rotation);
+	}
+	gclone.gameObject.active = true;
+	gclone.velocity = transform.TransformDirection(Vector3.forward * 12.5);
+	if(grenadeCook < 5 && Grenades[GrenadeList[grenadeEquipped - 1] - 1].type == 1)
+	{
+		gclone.SendMessage("GrenadeTime", grenadeCook, SendMessageOptions.DontRequireReceiver);
+		grenadeCook = 0;
+	}
+	GrenadeList.RemoveAt(grenadeEquipped - 1);
+	if(grenadeEquipped != 1)
+	{
+		grenadeEquipped -= 1;
+	}
+	if(GrenadeList.Count == 0)
+	{
+		equipped = "gun";
+		gunequipped = 1;
+		animator1.Play("Equip" + uName);
+	}
+	timer = -0.3;
+	isLoaded = false;
 }
 
 function Grenade (ID : int) {
@@ -743,11 +1774,6 @@ function Grenade (ID : int) {
 				GrenadeList.Add(i.ID);
 			}
 		}
-	}
-	else
-	{
-		var grenade = Instantiate(prevTake, transform.position, transform.rotation);
-		grenade.velocity = transform.TransformDirection(Vector3.forward * 5);
 	}
 }
 
@@ -802,7 +1828,7 @@ function PickSong () {
 				usS1Effect2.text = "MeleeSpeed-";
 				meleeSpeedMulti = song.Effect2Multi;
 			}
-			phoneAnimator.PlayQueued("ChooseSong");
+			phoneanimator1.PlayQueued("ChooseSong");
 			musicAudioSource.clip = song.musicAudio;
 			if(isPlaying == true)
 			{
@@ -810,7 +1836,7 @@ function PickSong () {
 				gunAudioSource.volume = 1;
 				playerController.SendMessage("SpeedDown");
 			}
-			yield WaitForSeconds(phoneAnimator["ChooseSong"].length);
+			yield WaitForSeconds(phoneanimator1["ChooseSong"].length);
 			usS2Name.text = usS1Name.text;
 			usS2Effect.text = usS1Effect.text;
 			usS2Effect2.text = usS1Effect2.text;
@@ -818,42 +1844,142 @@ function PickSong () {
 	}
 }
 
-function Reload () {
-	animator.Play("Reload" + uName);
-	timer = 0 - animator["Reload" + uName].length;
-	yield WaitForSeconds(animator["Reload" + uName].length);
-	animator.Play("Reload" + uName + "2");
-	timer = 0 - animator["Reload" + uName + "2"].length;
-	yield WaitForSeconds(animator["Reload" + uName + "2"].length + 0.1);
-	uAmmo += 1;
-	uReserve -= 1;
-	if(uAmmo == uMaxClip || uReserve == 0)
+function ReloadSounds () {
+	if(gunequipped == 1)
 	{
-		animator.Play("Reload" + uName + "3");
-		timer = 0 - animator["Reload" + uName + "3"].length;
-		reloading = false;
+		for(var sounds : ReloadSet in reloadList)
+		{
+			if(uRSet == sounds.Name)
+			{
+				for(var sound : ReloadSound in sounds.Sounds)
+				{
+					if(uSingleReload == false)
+					{
+						yield WaitForSeconds((animator1["Reload" + uName + ""].length / sound.animTime) / animator1["Reload" + uName + ""].speed);
+						gunAudioSource.Stop();
+						gunAudioSource.clip = sound.Sound;
+						gunAudioSource.Play();
+					}
+					else
+					{
+						yield WaitForSeconds((animator1["Reload" + uName + "2"].length / sound.animTime) / animator1["Reload" + uName + "2"].speed);
+						gunAudioSource.Stop();
+						gunAudioSource.clip = sound.Sound;
+						gunAudioSource.Play();
+					}
+				}
+			}
+		}
 	}
-	if(uAmmo != uMaxClip && uReserve != 0)
+	else if(gunequipped == 2)
 	{
-		StartCoroutine("ContReload");
+		for(var sounds : ReloadSet in reloadList)
+		{
+			if(u2rSet == sounds.Name)
+			{
+				for(var sound : ReloadSound in sounds.Sounds)
+				{
+					if(u2SingleReload == false)
+					{
+						yield WaitForSeconds((animator1["Reload" + u2Name].length / sound.animTime) / animator1["Reload" + u2Name + ""].speed);
+						gunAudioSource.Stop();
+						gunAudioSource.clip = sound.Sound;
+						gunAudioSource.Play();
+					}
+					else
+					{
+						yield WaitForSeconds((animator1["Reload" + u2Name + "2"].length / sound.animTime) / animator1["Reload" + u2Name + "2"].speed);
+						gunAudioSource.Stop();
+						gunAudioSource.clip = sound.Sound;
+						gunAudioSource.Play();
+					}
+				}
+			}
+		}
+	}
+}
+
+function Reload () {
+	if(gunequipped == 1)
+	{
+		animator1.Play("Reload" + uName);
+		yield WaitForSeconds(animator1["Reload" + uName + ""].length);
+		StartCoroutine("ReloadSounds");
+		animator1.Play("Reload" + uName + "2");
+		yield WaitForSeconds(((animator1["Reload" + uName + "2"].length + 0.1) / uRTime) / animator1["Reload" + uName + "2"].speed);
+		uAmmo += 1;
+		uReserve -= 1;
+		if(uAmmo == uMaxClip || uReserve == 0)
+		{
+			animator1.Play("Reload" + uName + "3");
+			reloading = false;
+		}
+		if(uAmmo != uMaxClip && uReserve != 0)
+		{
+			StartCoroutine("ContReload");
+		}
+	}
+	if(gunequipped == 2)
+	{
+		animator1.Play("Reload" + u2Name);
+		yield WaitForSeconds(animator1["Reload" + u2Name].length);
+		StartCoroutine("ReloadSounds");
+		animator1.Play("Reload" + u2Name + "2");
+		yield WaitForSeconds(((animator1["Reload" + u2Name + "2"].length + 0.1) / u2rTime) / animator1["Reload" + u2Name + "2"].speed);
+		u2Ammo += 1;
+		u2Reserve -= 1;
+		if(u2Ammo == u2MaxClip || u2Reserve == 0)
+		{
+			animator1.Play("Reload" + u2Name + "3");
+			reloading = false;
+		}
+		if(u2Ammo != u2MaxClip && u2Reserve != 0)
+		{
+			StartCoroutine("ContReload");
+		}
 	}
 }
 
 function ContReload () {
-	animator.Play("Reload" + uName + "2");
-	timer = 0 - animator["Reload" + uName + "2"].length;
-	yield WaitForSeconds(animator["Reload" + uName + "2"].length + 0.1);
-	uAmmo += 1;
-	uReserve -= 1;
-	if(uAmmo == uMaxClip || uReserve == 0)
+	if(gunequipped == 1)
 	{
-		animator.Play("Reload" + uName + "3");
-		timer = 0 - animator["Reload" + uName + "3"].length;
-		reloading = false;
+		StartCoroutine("ReloadSounds");
+		if(!animator1.IsPlaying("Reload" + uName + "2"))
+		{
+			animator1.Play("Reload" + uName + "2");
+		}
+		yield WaitForSeconds(((animator1["Reload" + uName + "2"].length + 0.1) / uRTime) / animator1["Reload" + uName + "2"].speed);
+		uAmmo += 1;
+		uReserve -= 1;
+		if(uAmmo == uMaxClip || uReserve == 0)
+		{
+			animator1.Play("Reload" + uName + "3");
+			reloading = false;
+		}
+		if(uAmmo != uMaxClip && uReserve != 0)
+		{
+			StartCoroutine("ContReload");
+		}
 	}
-	if(uAmmo != uMaxClip && uReserve != 0)
+	if(gunequipped == 2)
 	{
-		StartCoroutine("ContReload");
+		StartCoroutine("ReloadSounds");
+		if(!animator1.IsPlaying("Reload" + u2Name + "2"))
+		{
+			animator1.Play("Reload" + u2Name + "2");
+		}
+		yield WaitForSeconds(((animator1["Reload" + u2Name + "2"].length + 0.1) / u2rTime) / animator1["Reload" + u2Name + "2"].speed);
+		u2Ammo += 1;
+		u2Reserve -= 1;
+		if(u2Ammo == u2MaxClip || u2Reserve == 0)
+		{
+			animator1.Play("Reload" + u2Name + "3");
+			reloading = false;
+		}
+		if(u2Ammo != u2MaxClip && u2Reserve != 0)
+		{
+			StartCoroutine("ContReload");
+		}
 	}
 }
 
@@ -867,19 +1993,19 @@ function Melee (Item : int)
 			{
 				if(umType == 0)
 				{
-					animator.PlayQueued("DequipOneHanded");
+					animator1.PlayQueued("DequipOneHanded");
 					equipped = "";
-					yield WaitForSeconds(animator["DequipOneHanded"].length);
-					uMTransform.gameObject.active = false;
+					yield WaitForSeconds(animator1["DequipOneHanded"].length);
 				}
 				if(umType == 1)
 				{
-					animator.PlayQueued("DequipTwoHanded");
+					animator1.PlayQueued("DequipTwoHanded");
 					equipped = "";
-					yield WaitForSeconds(animator["DequipTwoHanded"].length);
-					uMTransform.gameObject.active = false;
+					yield WaitForSeconds(animator1["DequipTwoHanded"].length);
 				}
 			}
+			uMID = melee.ID;
+			uMTransform.gameObject.active = false;
 			uMName = melee.Name;
 			umType = melee.MType;
 			uSpeedMultiplier = melee.SpeedMultiplier;
@@ -888,82 +2014,204 @@ function Melee (Item : int)
 			uMTexture = melee.texture;
 			uMTransform = melee.transform;
 			uMDistance = melee.distance;
+			uMSound = melee.sound;
 		}
 	}
 }
 
 function HitPoints () {
 	Points += 10;
+	uiCarrier.SendMessage("GainPoints", 10, SendMessageOptions.DontRequireReceiver);
+}
+
+function RepairPoints () {
+	Points += 10;
+	uiCarrier.SendMessage("GainPoints", 10, SendMessageOptions.DontRequireReceiver);
 }
 
 function KillPoints (points : int) {
 	Points += points;
+	if(gamecontroller != null)
+	{
+		gamecontroller.SendMessage("Kill", SendMessageOptions.DontRequireReceiver);
+	}
+	uiCarrier.SendMessage("GainPoints", points, SendMessageOptions.DontRequireReceiver);
+}
+
+function Headshot(){
+	if(gamecontroller != null)
+	{
+		gamecontroller.SendMessage("Headshot", SendMessageOptions.DontRequireReceiver);
+	}
 }
 
 function Gun (Item : int)
 {
-	for (var gun : GunItem in FireArms)
+	if(guns == 2)
 	{
-		if(gun.ID == Item)
+		animator1.Stop();
+		StopCoroutine("Reload");
+		StopCoroutine("ContReload");
+		if(gunequipped == 1)
 		{
-			if(uName != "" && gun.ID != uID)
+			for (var gun : GunItem in FireArms)
 			{
-				if(equipped == "gun")
+				if(gun.ID == Item)
 				{
-					animator.PlayQueued("Dequip" + uName);
-					equipped = "";
+					if(uName != "" && gun.ID != uID)
+					{
+						if(equipped == "gun")
+						{
+							animator1.PlayQueued("Dequip" + uName);
+							
+						}
+					}
+					uID = gun.ID;
+					uName = gun.Name;
+					uDamage = gun.Damage;
+					uAmmo = gun.Ammo;
+					uMaxClip = gun.Ammo;
+					uReserve = gun.Reserve;
+					uReserveMax = gun.ReserveMax;
+					uRPM = gun.RPM;
+					intendedPellets = gun.Pellets;
+					uPellets = intendedPellets;
+					uAccuracy = gun.Accuracy;
+					uIsAutomatic = gun.IsAutomatic;
+					uSingleReload = gun.SingleReload;
+					uAudio = gun.audio;
+					uAimReduce = gun.aimReduce;
+					uFovZoom = gun.fovZoom;
+					uScoped = gun.scoped;
+					uRSet = gun.reloadSet;
+					uRTime = gun.rTime;
+					uSPos = gun.sPos;
+					uSRot = gun.sRot;
+					if(equipped == "gun")
+					{
+						animator1.PlayQueued("Equip" + uName);
+						equipped = "gun";
+						timer = (0 - 60.0 / uRPM - (animator1["Equip" + uName].length + animator1["Dequip" + uName].length));
+					}
+					animator3["Aim" + uName].layer = 1;
 				}
 			}
-			uID = gun.ID;
-			uName = gun.Name;
-			uDamage = gun.Damage;
-			uMaxClip = gun.Ammo;
-			uReserve = gun.Reserve;
-			uReserveMax = gun.ReserveMax;
-			uTimer = gun.Timer;
-			intendedPellets = gun.Pellets;
-			uPellets = intendedPellets;
-			uAccuracy = gun.Accuracy;
-			uIsAutomatic = gun.IsAutomatic;
-			uSingleReload = gun.SingleReload;
-			uAudio = gun.audio;
-			uMuzzle = gun.muzzleflash;
-			uTexture = gun.texture;
+		}
+		if(gunequipped == 2)
+		{
+			for (var gun : GunItem in FireArms)
+			{
+				if(gun.ID == Item)
+				{
+					if(u2Name != "" && gun.ID != u2ID)
+					{
+						if(equipped == "gun")
+						{
+							animator1.PlayQueued("Dequip" + u2Name);
+						}
+					}
+					u2ID = gun.ID;
+					u2Name = gun.Name;
+					u2Damage = gun.Damage;
+					u2Ammo = gun.Ammo;
+					u2MaxClip = gun.Ammo;
+					u2Reserve = gun.Reserve;
+					u2ReserveMax = gun.ReserveMax;
+					u2RPM = gun.RPM;
+					intendedPellets2 = gun.Pellets;
+					u2Pellets = intendedPellets2;
+					u2Accuracy = gun.Accuracy;
+					u2IsAutomatic = gun.IsAutomatic;
+					u2SingleReload = gun.SingleReload;
+					u2Audio = gun.audio;
+					u2AimReduce = gun.aimReduce;
+					u2fovZoom = gun.fovZoom;
+					u2scoped = gun.scoped;
+					u2rSet = gun.reloadSet;
+					u2rTime = gun.rTime;
+					u2SPos = gun.sPos;
+					u2SRot = gun.sRot;
+					if(equipped == "gun")
+					{
+						animator1.PlayQueued("Equip" + u2Name);
+						equipped = "gun";
+						timer = (0 - 60.0 / u2RPM - (animator1["Equip" + u2Name].length + animator1["Dequip" + u2Name].length));
+					}
+					animator3["Aim" + u2Name].layer = 1;
+				}
+			}
+		}
+	}
+	if(guns == 1)
+	{
+		for (var gun : GunItem in FireArms)
+		{
+			if(gun.ID == Item)
+			{
+				guns = 2;
+				u2ID = gun.ID;
+				u2Name = gun.Name;
+				u2Damage = gun.Damage;
+				u2Ammo = gun.Ammo;
+				u2MaxClip = gun.Ammo;
+				u2Reserve = gun.Reserve;
+				u2ReserveMax = gun.ReserveMax;
+				u2RPM = gun.RPM;
+				intendedPellets2 = gun.Pellets;
+				u2Pellets = intendedPellets2;
+				u2Accuracy = gun.Accuracy;
+				u2IsAutomatic = gun.IsAutomatic;
+				u2SingleReload = gun.SingleReload;
+				u2Audio = gun.audio;
+				u2AimReduce = gun.aimReduce;
+				u2fovZoom = gun.fovZoom;
+				u2scoped = gun.scoped;
+				u2rSet = gun.reloadSet;
+				u2rTime = gun.rTime;
+				u2SPos = gun.sPos;
+				u2SRot = gun.sRot;
+			}
 		}
 	}
 	buyprice = 0;
+	spinnerhost.GetComponent.<SpinnerHostScript>().weapon1 = uID;
+	spinnerhost.GetComponent.<SpinnerHostScript>().weapon2 = u2ID;
 }
 
 function SwingMelee () {	
 	if(umType == 0)
 	{
-		animator["SwingOneHanded"].speed = uSpeedMultiplier + meleeSpeedMulti; 
-		timer = (0 - animator["SwingOneHanded"].length);
-		animator.Play("SwingOneHanded");
-		yield WaitForSeconds(animator["SwingOneHanded"].length / 2);
+		animator1["SwingOneHanded"].speed = uSpeedMultiplier * (meleeSpeedMulti * statusEffectMulti); 
+		timer = (0 - animator1["SwingOneHanded"].length);
+		animator1.Play("SwingOneHanded");
+		yield WaitForSeconds(animator1["SwingOneHanded"].length / 2);
 		var hit : RaycastHit;
-		Physics.Raycast (aimer.position, transform.TransformDirection (Vector3.forward), hit, Mathf.Infinity, layerMask);
+		Physics.Raycast (aimer.position, transform.TransformDirection (Vector3.forward), hit, 500, layerMask);
 		Distance = hit.distance;
 		if(Distance <= uMDistance && hit != null)
 		{
-			var spark = Instantiate(shot, hit.point, shot.rotation);
-			spark.gameObject.layer = 11;
+			gunAudioSource.clip = uMSound;
+			gunAudioSource.Play();
+			//var spark = Instantiate(shot, hit.point, shot.rotation);
+			//spark.gameObject.layer = 11;
 			hit.transform.SendMessage("Melee", uMDamage, SendMessageOptions.DontRequireReceiver);
 		}
 	}
 	if(umType == 1)
 	{
-		animator["SwingTwoHanded1"].speed = uSpeedMultiplier + meleeSpeedMulti; 
-		timer = (0 - animator["SwingTwoHanded1"].length);
-		animator.Play("SwingTwoHanded1");
-		yield WaitForSeconds(animator["SwingTwoHanded1"].length / 2);
+		animator1["SwingTwoHanded"].speed = uSpeedMultiplier * (meleeSpeedMulti * statusEffectMulti); 
+		timer = (0 - animator1["SwingTwoHanded"].length);
+		animator1.Play("SwingTwoHanded");
+		yield WaitForSeconds(animator1["SwingTwoHanded"].length / 2);
 		var hit2 : RaycastHit;
-		Physics.Raycast (aimer.position, transform.TransformDirection (Vector3.forward), hit2, Mathf.Infinity, layerMask);
+		Physics.Raycast (aimer.position, transform.TransformDirection (Vector3.forward), hit2, 500, layerMask);
 		Distance = hit2.distance;
 		if(Distance <= uMDistance && hit2 != null)
 		{
-			var spark2 = Instantiate(shot, hit2.point, shot.rotation);
-			spark2.gameObject.layer = 11;
+			gunAudioSource.clip = uMSound;
+			gunAudioSource.Play();
+			//var spark2 = Instantiate(shot, hit2.point, shot.rotation);
+			//spark2.gameObject.layer = 11;
 			hit2.transform.SendMessage("Melee", uMDamage, SendMessageOptions.DontRequireReceiver);
 		}
 	}
@@ -990,27 +2238,78 @@ function BuyFrom (purchase : Transform)
 {
 	if(Points >= buyprice)
 	{
+		uiCarrier.SendMessage("BoughtItem", buyprice, SendMessageOptions.DontRequireReceiver);
 		Points -= buyprice;
 		purchase.SendMessage("Buy", SendMessageOptions.DontRequireReceiver);
 	}
 }
 
+function Explode (damage : int)
+{
+	//Debug.Log("Player explodededed");
+	Health -= damage / 10;
+	healthcooldowntimer = 0;
+}
+
 function GunBuying (type : int){
-	if(Points >= buyprice)
+	if(guns == 2)
 	{
-		for (var gun : GunItem in FireArms)
+		if(gunequipped == 1)
 		{
-			if(gun.ID == uID && uReserve != gun.ReserveMax)
+			for (var gun : GunItem in FireArms)
 			{
-				buyprice = buyprice / 2;
-				uReserve = gun.ReserveMax;
-				Points -= buyprice;
+				if(gun.ID == uID && uReserve != gun.ReserveMax)
+				{
+					buyprice = buyprice / 2;
+					if(Points >= buyprice){
+						uReserve = gun.ReserveMax;
+						Points -= buyprice;
+						uiCarrier.SendMessage("BoughtItem", buyprice, SendMessageOptions.DontRequireReceiver);
+					}
+				}
+				else if(gun.ID == type && type != uID)
+				{
+					if(Points >= buyprice){
+						uiCarrier.SendMessage("BoughtItem", buyprice, SendMessageOptions.DontRequireReceiver);
+						Points -= buyprice;
+						transform.SendMessage("Gun", type, SendMessageOptions.DontRequireReceiver);
+					}
+				}
 			}
-			if(gun.ID == type && type != uID)
+		}
+		if(gunequipped == 2)
+		{
+			for (var gun : GunItem in FireArms)
 			{
-				Points -= buyprice;
-				transform.SendMessage("Gun", type, SendMessageOptions.DontRequireReceiver);
+				if(gun.ID == u2ID && u2Reserve != gun.ReserveMax)
+				{
+					buyprice = buyprice / 2;
+					if(Points >= buyprice)
+					{
+						u2Reserve = gun.ReserveMax;
+						Points -= buyprice;
+						uiCarrier.SendMessage("BoughtItem", buyprice, SendMessageOptions.DontRequireReceiver);
+					}
+				}
+				else if(gun.ID == type && type != u2ID)
+				{
+					if(Points >= buyprice)
+					{
+						uiCarrier.SendMessage("BoughtItem", buyprice, SendMessageOptions.DontRequireReceiver);
+						Points -= buyprice;
+						transform.SendMessage("Gun", type, SendMessageOptions.DontRequireReceiver);
+					}
+				}
 			}
+		}
+	}
+	else if(guns == 1)
+	{
+		if(Points >= buyprice)
+		{
+			uiCarrier.SendMessage("BoughtItem", buyprice, SendMessageOptions.DontRequireReceiver);
+			Points -= buyprice;
+			transform.SendMessage("Gun", type, SendMessageOptions.DontRequireReceiver);
 		}
 	}
 }
@@ -1023,35 +2322,70 @@ function PerkColour (content : Color)
 
 function Perk (Type : int)
 {
+	if(gamecontroller != null)
+	{
+		gamecontroller.SendMessage("Perk", SendMessageOptions.DontRequireReceiver);
+	}
+	transform.SendMessage("DisableTemporarily", SendMessageOptions.DontRequireReceiver);
 	var prevequip : String;
 	if(equipped == "grenade")
 	{
-		animator.Play("DequipGrenadeLauncher");
+		animator1.PlayQueued("Dequip" + gName);
 		prevequip = "grenade";
-		yield WaitForSeconds(animator["DequipGrenadeLauncher"].length);
+		yield WaitForSeconds(animator1["Dequip" + gName].length);
 	}
 	if(equipped == "gun")
 	{
-		animator.Play("Dequip" + uName);
-		prevequip = "gun";
-		yield WaitForSeconds(animator["Dequip" + uName].length);
+		if(gunequipped == 1)
+		{
+			animator1.PlayQueued("Dequip" + uName);
+			
+			prevequip = "gun";
+			timer = 0 - animator1["Dequip" + uName + ""].length;
+			yield WaitForSeconds(animator1["Dequip" + uName + ""].length);
+		}
+		else if(gunequipped == 2)
+		{
+			animator1.PlayQueued("Dequip" + u2Name);
+			
+			prevequip = "gun";
+			timer = 0 - animator1["Dequip" + u2Name + ""].length;
+			yield WaitForSeconds(animator1["Dequip" + u2Name].length);
+		}
+	}
+	if(equipped == "Slot4")
+	{
+		animator1.PlayQueued("Dequip" + slot4Name);
+		prevequip = "Slot4";
+		timer = 0 - animator1["Dequip" + slot4Name + ""].length;
+		yield WaitForSeconds(animator1["Dequip" + slot4Name].length);
+	}
+	if(equipped == "Slot5")
+	{
+		animator1.PlayQueued("Dequip" + slot5name);
+		prevequip = "Slot5";
+		timer = 0 - animator1["Dequip" + slot5name + ""].length;
+		yield WaitForSeconds(animator1["Dequip" + slot5name].length);
 	}
 	if(equipped == "melee")
 	{
 		if(umType == 0)
 		{
-			animator.Play("DequipOneHanded");
-			yield WaitForSeconds(animator["DequipOneHanded"].length);
+			animator1.PlayQueued("DequipOneHanded");
+			timer = 0 - animator1["DequipOneHanded"].length;
+			yield WaitForSeconds(animator1["DequipOneHanded"].length);
 		}
 		if(umType == 1)
 		{
-			animator.Play("DequipTwoHanded");
-			yield WaitForSeconds(animator["DequipTwoHanded"].length);
+			animator1.PlayQueued("DequipTwoHanded");
+			timer = 0 - animator1["DequipTwoHanded"].length; //happy birthday leify spuds, love you lots and lots and lots and lots xxxx
+			yield WaitForSeconds(animator1["DequipTwoHanded"].length);
 		}
 		prevequip = "melee";
 	}
-	animator.Play("InjectSyringe");
-	yield WaitForSeconds(animator["InjectSyringe"].length);
+	animator1.PlayQueued("InjectSyringe");
+	timer = 0 - animator1["InjectSyringe"].length;
+	yield WaitForSeconds(animator1["InjectSyringe"].length);
 	for(var i : PerkType in Perks)
 	{
 		if(i.ID == Type)
@@ -1061,31 +2395,55 @@ function Perk (Type : int)
 	}
 	if(prevequip == "grenade")
 	{
-		animator.Play("EquipGrenadeLauncher");
+		animator1.PlayQueued("Equip" + gName);
 		equipped = "grenade";
-		timer = 0 - animator["EquipGrenadeLauncher"].length;
-		
+		timer = 0 - animator1["Equip" + gName].length;	
 	}
 	if(prevequip == "gun")
 	{
-		animator.Play("Equip" + uName);
-		equipped = "gun";
-		timer = 0 - animator["Equip" + uName].length;
-		
+		if(gunequipped == 1)
+		{
+			animator1.PlayQueued("Equip" + uName);
+			equipped = "gun";
+			timer = 0 - animator1["Equip" + uName + ""].length;
+		}
+		if(gunequipped == 2)
+		{
+			animator1.PlayQueued("Equip" + u2Name);
+			equipped = "gun";
+			timer = 0 - animator1["Equip" + u2Name].length;
+		}
 	}
 	if(prevequip == "melee")
 	{
 		if(umType == 0)
 		{
-			animator.Play("EquipOneHanded");
-			timer = 0 - animator["EquipOneHanded"].length;
+			animator1.PlayQueued("EquipOneHanded");
+			timer = 0 - animator1["EquipOneHanded"].length;
 		}
 		if(umType == 1)
 		{
-			animator.Play("EquipTwoHanded");
-			timer = 0 - animator["EquipTwoHanded"].length;
+			animator1.PlayQueued("EquipTwoHanded");
+			timer = 0 - animator1["EquipTwoHanded"].length;
 		}
 		equipped = "melee";
+	}
+	if(prevequip == "Slot4")
+	{
+		animator1.PlayQueued("Equip" + slot4Name);
+		timer = 0 - animator1["Equip" + slot4Name].length;
+	}
+	if(prevequip == "Slot5")
+	{
+		animator1.PlayQueued("Equip" + slot5name);
+		timer = 0 - animator1["Equip" + slot5name].length;
+	}
+}
+
+function Door () {
+	if(gamecontroller != null)
+	{
+		gamecontroller.SendMessage("Door", SendMessageOptions.DontRequireReceiver);
 	}
 }
 
@@ -1096,140 +2454,21 @@ var style4 : GUIStyle;
 var adjusterx : float;
 var adjustery : float;
 
-function OnGUI () {
-	if(PerkList.Count >= 1)
+function Slot4 (id : int) {
+	for(var i : Slot4Gun in slot4Weapons)
 	{
-		for(var i : PerkType in Perks)
+		if(i.ID == id)
 		{
-			if(i.ID == PerkList[0])
-			{
-				GUI.DrawTexture(Rect(0, labelHeight - (200 / (Screen.height * 0.00166)), 30 * (Screen.width * 0.00125), 37.5 * (Screen.height * 0.00166)), i.icon);
-			}
+			slot4ID = id;
+			slot4Name = i.name;
+			slot4Ammo = i.ammo;
+			slot4MaxAmmo = i.ammo;
+			slot4AmmoConsume = i.ammoconsumption;
+			slot4ChargeTime = i.chargetime;
+			slot4Types = i.types;
+			slot4Projectiles = i.projectiles;
 		}
 	}
-	if(PerkList.Count >= 2)
-	{
-		for(var i : PerkType in Perks)
-		{
-			if(i.ID == PerkList[1])
-			{
-				GUI.DrawTexture(Rect(0, labelHeight - ((200 / (Screen.height * 0.00166)) - 40 * (Screen.height * 0.00166)), 30 * (Screen.width * 0.00125), 37.5 * (Screen.height * 0.00166)), i.icon);
-			}
-		}
-	}
-	if(PerkList.Count >= 3)
-	{
-		for(var i : PerkType in Perks)
-		{
-			if(i.ID == PerkList[2])
-			{
-				GUI.DrawTexture(Rect(0, labelHeight - ((200 / (Screen.height * 0.00166)) - (40 * (Screen.height * 0.00166) * 2)), 30 * (Screen.width * 0.00125), 37.5 * (Screen.height * 0.00166)), i.icon);
-			}
-		}
-	}
-	if(PerkList.Count >= 4)
-	{
-		for(var i : PerkType in Perks)
-		{
-			if(i.ID == PerkList[3])
-			{
-				GUI.DrawTexture(Rect(0, labelHeight - ((200 / (Screen.height * 0.00166)) - (40 * (Screen.height * 0.00166) * 3)), 30 * (Screen.width * 0.00125), 37.5 * (Screen.height * 0.00166)), i.icon);
-			}
-		}
-	}
-	style.fontSize = 16 * (Screen.width / 570);
-	style2.fontSize = 16 * (Screen.width / 570);
-	style3.fontSize = 16 * (Screen.width / 570);
-	style4.fontSize = 16 * (Screen.width / 570);
-	textColor.fontSize = 16 * (Screen.width / 570);
- 	GUI.DrawTexture(Rect(0, 0, Screen.width, Screen.height), safeArea);
- 	if(GrenadeList.Count >= 1)
-	{
-		for(var i : Grenade in Grenades)
-		{
-			if(i.ID == GrenadeList[0])
-			{
-				GUI.DrawTexture(Rect(0, 0, Screen.width, Screen.height), i.texture);
-			}
-			if(equipped == "grenade" && GrenadeList.Count == 1)
-			{
-				GUI.DrawTexture(Rect(0, 0, Screen.width, Screen.height), SelectedGrenade);
-			}
-		}
-	}
-	if(GrenadeList.Count >= 2)
-	{
-		for(var i : Grenade in Grenades)
-		{
-			if(i.ID == GrenadeList[1])
-			{
-				GUI.DrawTexture(Rect(0 + (40 * (Screen.width * 0.00125)), 0, Screen.width, Screen.height), i.texture);
-			}
-			if(equipped == "grenade" && GrenadeList.Count == 2)
-			{
-				GUI.DrawTexture(Rect(0 + (40 * (Screen.width * 0.00125)), 0, Screen.width, Screen.height), SelectedGrenade);
-			}
-		}
-	}
-	if(GrenadeList.Count >= 3)
-	{
-		for(var i : Grenade in Grenades)
-		{
-			if(i.ID == GrenadeList[2])
-			{
-				GUI.DrawTexture(Rect(0, 0 + (40 * (40 / (Screen.height * 0.0666))), Screen.width, Screen.height), i.texture);
-			}
-			if(equipped == "grenade" && GrenadeList.Count == 3)
-			{
-				GUI.DrawTexture(Rect(0, 0 + (40 * (40 / (Screen.height * 0.0666))), Screen.width, Screen.height), SelectedGrenade);
-			}
-		}
-	}
-	if(GrenadeList.Count >= 4)
-	{
-		for(var i : Grenade in Grenades)
-		{
-			if(i.ID == GrenadeList[3])
-			{
-				GUI.DrawTexture(Rect(0 + (40 * (Screen.width * 0.00125)), 0 + (40 * (40 / (Screen.height * 0.0666))), Screen.width, Screen.height), i.texture);
-			}
-			if(equipped == "grenade" && GrenadeList.Count == 4)
-			{
-				GUI.DrawTexture(Rect(0 + (40 * (Screen.width * 0.00125)), 0 + (40 * (40 / (Screen.height * 0.0666))), Screen.width, Screen.height), SelectedGrenade);
-			}
-		}
-	}
-	GUI.DrawTexture(Rect(0 - (Health * 36), 0 - (Health * 36), (Screen.width + (Health * 72)), (Screen.height + (Health * 72))), damageindicator);
- 	if(invulnerable == true)
- 	{
- 		GUI.Label (Rect (Screen.height / 2, Screen.height / 2 - 100, (Screen.width / 1.8125), (Screen.height / 19)), (invincount + ""), textColor);
- 	}
- 	if(uMTexture != null)
-	{
-		GUI.DrawTexture(Rect(0, 0, Screen.width, Screen.height), uMTexture);
-	}
- 	if(uTexture != null)
-	{
-		GUI.DrawTexture(Rect(0, 0, Screen.width, Screen.height), uTexture);
-	}
-	if(dead == false && coolingDown == true)
-	{
-		GUI.Label (Rect (Screen.height / 2, Screen.height / 2 - 100, (Screen.width / 1.8125), (Screen.height / 19)), ("Wave " + Round + " Beginning In " + coolDown), textColor);
-	}
-	if(dead == true)
-	{
-		GUI.Label (Rect (Screen.height / 2, Screen.height / 2 - 100, (Screen.width / 1.8125), (Screen.height / 19)), "Game Over", textColor);
-		GUI.Label (Rect (Screen.height / 2, Screen.height / 2 - 65, (Screen.width / 1.8125), (Screen.height / 19)), ("You Survived For " + Round + " Rounds"), textColor);
-	}
-	GUI.Label (Rect (0, 0, 100, 100), (Screen.width + "/" + Screen.height + "/" + style.fontSize));
-	GUI.Label (Rect (labelWidth, labelHeight2, (Screen.width / 1.8125), (Screen.height / 19)), (Round + ""), style3);
-	GUI.Label (Rect (labelWidth, labelHeight, (Screen.width / 1.8125), (Screen.height / 19)), (Health + ""), style);
-	GUI.Label (Rect (labelWidth, (Screen.height / 2), (Screen.width / 1.8125), (Screen.height / 19)), (Points + ""), style4);
-	GUI.Label (Rect (labelWidth2, labelHeight, (Screen.width / 1.8125), (Screen.height / 19)), (uAmmo + "/" + uReserve), style2);
-}
-
-function ZedDown () {
-	zedcount -= 1;
 }
 
 function PlayerHit () {
@@ -1241,14 +2480,204 @@ function PlayerHit () {
 		{
 			Health = 0;
 		}
+		healthcooldowntimer = 0;
 	}
 }
 
-function CurrentAmmo (Ammo : int)
-{
-	if(Points >= buyprice)
+function FireGun () {
+	firing = true;
+	if(gunequipped == 1)
 	{
-		uAmmo = Ammo;
-		buyprice = 0;
+		gunAudioSource.clip = uAudio;
 	}
+	if(gunequipped == 2)
+	{
+		gunAudioSource.clip = u2Audio;
+	}
+	if(gunequipped == 1)
+	{
+		if(!animator1.IsPlaying("Reload" + uName) && !animator1.IsPlaying("Reload" + uName + "2") && !animator1.IsPlaying("Reload" + uName + "3"))
+		{
+			animator1.Stop("Fire" + uName);
+			gunAudioSource.Play();
+			animator1.Play("Fire" + uName);
+			uAmmo -= 1;
+			var iP : int;
+			if(gunequipped == 1)
+			{
+				iP = uPellets;
+			}
+			if(gunequipped == 2)
+			{
+				iP = u2Pellets;
+			}
+			if(!uIsAutomatic)
+			{
+				fired = true;
+			}
+			for(var i : int = 0; i < iP; i++)
+			{
+				aimer.localRotation.x = Random.Range(-realaccuracy, realaccuracy);
+				aimer.localRotation.y = Random.Range(-realaccuracy, realaccuracy);
+				//var clone = Instantiate(bulletProj, transform.position, aimer.rotation);
+				//clone.gameObject.active = true;
+				//clone.SendMessage("Damager", uDamage * damageMulti * statusEffectMulti, SendMessageOptions.DontRequireReceiver);
+				//clone.velocity = aimer.transform.TransformDirection(Vector3.forward) * 50;
+				var hit : RaycastHit;
+				var hits : int = 1;
+				if(intendedPellets > 1){
+					hits = 2;
+				}
+				var rotate : Quaternion = aimer.rotation;
+				var lasthit : Transform = null;
+				var pos : Vector3 = aimer.position;
+				while(hits != 3)
+				{
+					if(Physics.Raycast (pos, rotate * Vector3.forward, hit, 500, layerMask))
+					{
+						if(lasthit != null){
+							lasthit.gameObject.layer = 15;
+						}
+						//Debug.Log("I've hit " + hit.transform.name);
+						if(hit.transform.tag == "Enemy")
+						{
+							lasthit = hit.transform;
+							pos = lasthit.position;
+							lasthit.gameObject.layer = 16;
+							//Debug.Log("Blood");
+							var bClone = Instantiate(bloodObj, hit.transform.position, transform.rotation);
+							bClone.gameObject.active = true;
+							//hit.transform.SendMessage("Shot", uDamage * damageMulti * statusEffectMulti, SendMessageOptions.DontRequireReceiver);
+							hit.transform.GetComponent.<BodyPartScript>().Shot((uDamage * damageMulti * statusEffectMulti) / (1 + (hits / 5)));
+							hits += 1;
+						}
+						else if(hit.transform.tag == "Target")
+						{
+							lasthit = hit.transform;
+							pos = lasthit.position;
+							lasthit.gameObject.layer = 16;
+							//Debug.Log("Blood");
+							var bClone3 = Instantiate(bloodObj, hit.transform.position, transform.rotation);
+							bClone3.gameObject.active = true;
+							//hit.transform.SendMessage("Shot", uDamage * damageMulti * statusEffectMulti, SendMessageOptions.DontRequireReceiver);
+							hit.transform.GetComponent.<TargetScript>().Shot();
+							hits += 1;
+						}
+						//var spark = Instantiate(shot, hit.point, shot.rotation);
+						//spark.gameObject.layer = 11;
+						else{
+							hits = 3;
+							if(lasthit != null)
+							{
+								lasthit.gameObject.layer = 15;
+								lasthit = null;
+							}
+						}
+					}
+					else
+					{
+					}
+				}
+				if(lasthit != null){
+					lasthit.gameObject.layer = 15;
+				}
+			}
+			fireaccuracyinc += realaccuracy / 3;
+			fireCool = 0;
+			yield WaitForSeconds (60.0 / uRPM);
+			firing = false;
+		}
+	}
+	else if(gunequipped == 2)
+	{
+		if(!animator1.IsPlaying("Reload" + u2Name) && !animator1.IsPlaying("Reload" + u2Name + "2") && !animator1.IsPlaying("Reload" + u2Name + "3"))
+		{
+			animator1.Stop("Fire" + u2Name);
+			gunAudioSource.Play();
+			animator1.Play("Fire" + u2Name);
+			u2Ammo -= 1;
+			var iP2 : int;
+			if(gunequipped == 1)
+			{
+				iP2 = uPellets;
+			}
+			if(gunequipped == 2)
+			{
+				iP2 = u2Pellets;
+			}
+			if(!u2IsAutomatic)
+			{
+				fired = true;
+			}
+			var hitted2 : boolean = false;
+			for(var i2 : int = 0; i2 < iP2; i2++)
+			{
+				aimer.localRotation.x = Random.Range(-realaccuracy, realaccuracy);
+				aimer.localRotation.y = Random.Range(-realaccuracy, realaccuracy);
+				//var clone2 = Instantiate(bulletProj, transform.position, aimer.rotation);
+				//clone2.rotation = aimer.localRotation;
+				//clone2.gameObject.active = true;
+				//clone2.SendMessage("Damager", uDamage * damageMulti * statusEffectMulti, SendMessageOptions.DontRequireReceiver);
+				//clone2.velocity = aimer.transform.TransformDirection(Vector3.forward) * 50;
+				var hit2 : RaycastHit;
+				var rotate2 : Quaternion = aimer.rotation;
+				var ip2 : int = 1;
+				var lasthit2 : Transform;
+				var pos2 : Vector3 = aimer.position;
+				var hits2 : int = 0;
+				if(intendedPellets2 > 1){
+					hits2 = 2;
+				}
+				while(hits2 != 3)
+				{
+					if(Physics.Raycast (pos2, rotate2 * Vector3.forward, hit2, 500, layerMask))
+					{
+						if(lasthit2 != null){
+							lasthit2.gameObject.layer = 15;
+						}
+						//Debug.Log("I've hit " + hit2.transform.name);
+						if(hit2.transform.tag == "Enemy")
+						{
+							lasthit2 = hit2.transform;
+							pos2 = lasthit2.position;
+							lasthit2.gameObject.layer = 16;
+							//Debug.Log("Blood");
+							var bClone2 = Instantiate(bloodObj, hit2.transform.position, transform.rotation);
+							bClone2.gameObject.active = true;
+							hit2.transform.GetComponent.<BodyPartScript>().Shot((u2Damage * damageMulti * statusEffectMulti) / (1 + (hits2 / 5)));
+						}
+						else{
+							hits2 = 3;
+							if(lasthit2 != null){
+								lasthit2.gameObject.layer = 15;
+								lasthit2 = null;
+							}
+						}
+					}
+					else
+					{
+
+					}
+				}
+				if(lasthit2 != null){
+					lasthit2.gameObject.layer = 15;
+				}
+			}
+			fireaccuracyinc += realaccuracy / 3;
+			fireCool = 0;
+			yield WaitForSeconds (60.0 / u2RPM);
+			firing = false;
+		}
+	}
+	firing = false;
+}
+
+function NewRound(round : int){
+	coolDown = 5;
+	coolingDown = true;
+	Round = round;
+}
+
+function Rounds(round : int){
+	Round = round;
 }

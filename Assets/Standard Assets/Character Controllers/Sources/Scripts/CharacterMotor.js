@@ -6,7 +6,9 @@
 var canControl : boolean = true;
 
 
-var speedmultiple : float = 1;
+var speedmultiple : float = 0;
+var speedaddon1 : float;
+var speedaddon2 : float;
 
 var useFixedUpdate : boolean = true;
 
@@ -21,6 +23,7 @@ var inputMoveDirection : Vector3 = Vector3.zero;
 // for the jump button directly so this script can also be used by AIs.
 @System.NonSerialized
 var inputJump : boolean = false;
+var script : MonoBehaviour;
 
 class CharacterMotorMovement {
 	// The maximum horizontal speed when moving
@@ -335,6 +338,7 @@ function FixedUpdate () {
 }
 
 function Update () {
+	speedmultiple = speedaddon1 + speedaddon2;
 	if (!useFixedUpdate)
 		UpdateFunction();
 }
@@ -571,9 +575,9 @@ function MaxSpeedInDirection (desiredMovementDirection : Vector3) : float {
 	if (desiredMovementDirection == Vector3.zero)
 		return 0;
 	else {
-		var zAxisEllipseMultiplier : float = (desiredMovementDirection.z > 0 ? movement.maxForwardSpeed : movement.maxBackwardsSpeed) / movement.maxSidewaysSpeed;
+		var zAxisEllipseMultiplier : float = (desiredMovementDirection.z > 0 ? (movement.maxForwardSpeed * speedmultiple) : (movement.maxBackwardsSpeed * speedmultiple)) / (movement.maxSidewaysSpeed * speedmultiple);
 		var temp : Vector3 = new Vector3(desiredMovementDirection.x, 0, desiredMovementDirection.z / zAxisEllipseMultiplier).normalized;
-		var length : float = new Vector3(temp.x, 0, temp.z * zAxisEllipseMultiplier).magnitude * movement.maxSidewaysSpeed;
+		var length : float = new Vector3(temp.x, 0, temp.z * zAxisEllipseMultiplier).magnitude * (movement.maxSidewaysSpeed * speedmultiple);
 		return length;
 	}
 }
@@ -585,21 +589,23 @@ function SetVelocity (velocity : Vector3) {
 	SendMessage("OnExternalVelocity");
 }
 
-function song1 ()
+function SpeedUp (multi : float)
 {
-	speedmultiple = 1;
+	speedaddon1 = multi;
 }
 
-function song3 ()
+function SpeedDown ()
 {
-	speedmultiple = 1.25;
+	speedaddon1 = 1;
 }
 
-function song4 ()
-{
-	speedmultiple = 1.5;
+function Sprint () {
+	speedaddon2 = 0.5;
 }
 
+function NoSprint () {
+	speedaddon2 = 0;
+}
 
 function MoveFast () {
 	maxForwardSpeed = 7.5;
@@ -617,6 +623,10 @@ function StopMoveFast () {
 	maxForwardSpeed = 6.0;
 	maxSidewaysSpeed = 6.0;
 	maxBackwardsSpeed = 4.0;
+}
+
+function Dead () {
+	script.enabled = false;
 }
 
 // Require a character controller to be attached to the same game object

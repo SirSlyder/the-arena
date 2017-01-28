@@ -1,3 +1,5 @@
+import UnityEngine.Networking;
+
 private var motor : CharacterMotor;
 
 var player : Transform;
