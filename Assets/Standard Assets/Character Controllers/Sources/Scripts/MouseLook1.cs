@@ -93,7 +93,7 @@ public class MouseLook1 : MonoBehaviour {
 
 	void Inverted(bool inverted) {
 		if (inverted) {
-			intendedY = -intendedY * 2;
+			intendedY = -intendedY;
 		}
 	}
 }

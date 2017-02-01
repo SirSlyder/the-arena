@@ -608,7 +608,7 @@ function NoSprint () {
 }
 
 function MoveFast () {
-	maxForwardSpeed = 7.5;
+	maxForwardSpeed = 5.5;
 	maxSidewaysSpeed = 5.0;
 	maxBackwardsSpeed = 5.0;
 }
@@ -620,8 +620,8 @@ function MoveFaster () {
 }
 
 function StopMoveFast () {
-	maxForwardSpeed = 6.0;
-	maxSidewaysSpeed = 6.0;
+	maxForwardSpeed = 4.0;
+	maxSidewaysSpeed = 4.0;
 	maxBackwardsSpeed = 4.0;
 }
 

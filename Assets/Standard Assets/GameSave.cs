@@ -50,11 +50,6 @@ public class GameSave : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
 		Load ();
-		if (fps) {
-			fpstext.enabled = true;
-		} else {
-			fpstext.enabled = false;
-		}
 		if(control == null)
 		{
 			DontDestroyOnLoad (gameObject);

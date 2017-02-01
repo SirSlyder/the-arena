@@ -67,8 +67,11 @@ function Update () {
 	}
 }
 
+function Round (round2 : int){
+	round = round2;
+}
+
 function NewRound (zedcount : int) {
-	round += 1;
 	spawntimer = -4;
 	count = zedcount;
 }

@@ -17,7 +17,7 @@ public class GameHost : MonoBehaviour {
 	// Use this for initialization
 	void Awake () {
 		Round = 1;
-		zedcount = 3;
+		zedcount = 6;
 		coolingDown = true;
 		spawner = GameObject.FindGameObjectsWithTag("Spawner");
 	}
@@ -43,6 +43,7 @@ public class GameHost : MonoBehaviour {
 			{
 				foreach(GameObject i in spawner)
 				{
+					i.SendMessage ("Round", Round, SendMessageOptions.DontRequireReceiver);
 					i.SendMessage("NewRound", zedcount, SendMessageOptions.DontRequireReceiver);
 				}
 				coolingDown = false;

@@ -421,14 +421,20 @@ function Awake () {
 	gameObject.active = false;
 	gameObject.active = true;
 	spawner = GameObject.FindGameObjectsWithTag("Spawner");
-	animator3["Aim" + uName].layer = 1;
+	if(uName != "")
+	{
+		animator3["Aim" + uName].layer = 1;
+	}
 }
 
 function Start () {
 	gamecontroller = GameObject.Find("GameController");
-	equipped = "gun";
-	animator1.PlayQueued("Equip" + uName);
-	timer = (0 - 60.0 / uRPM - animator1["Equip" + uName + ""].length);
+	if(uName != "")
+	{
+		equipped = "gun";
+		animator1.PlayQueued("Equip" + uName);
+		timer = (0 - 60.0 / uRPM - animator1["Equip" + uName + ""].length);
+	}
 }
 
 function Update () {
@@ -444,7 +450,114 @@ function Update () {
 		quittext.active = false;
 		AudioListener.pause = false;
 	}
-	if(!paused){
+	if(!Input.GetKey(KeyCode.LeftShift) && Stamina != 10)
+	{
+		if(regenTimer >= 0.05)
+		{
+			Stamina += 0.2;
+			regenTimer = 0;
+		}
+	}
+	if(Stamina > 10)
+	{
+		Stamina = 10;
+	}
+	if(Stamina > 0)
+	{
+		canSprint = true;
+		if(controller != null)
+		{
+			controller.SendMessage("CanSprint", SendMessageOptions.DontRequireReceiver);
+		}
+	}
+	if(!paused)
+	{
+		if(Health <= 0 && !PerkList.Contains(1) && dead == false)
+		{
+			if(dead == false)
+			{
+				healthtimer = 0;
+				textColor.normal.textColor.a = 0;
+			}
+			deadtimer += Time.deltaTime;
+			dead = true;
+			Health = 0;
+			if(gamecontroller != null)
+			{
+				gamecontroller.SendMessage("Dead", Round, SendMessageOptions.DontRequireReceiver);
+			}
+			transform.SendMessage("Dead", SendMessageOptions.DontRequireReceiver);
+			if(controller != null)
+			{
+				controller.SendMessage("Dead", SendMessageOptions.DontRequireReceiver);
+			}
+			animator1.gameObject.active = false;
+			PerkList.Clear();
+			if(deadtimer >= 3)
+			{
+				Application.LoadLevel("Menu");
+			}
+			
+		}
+		else if(Health <= 0 && PerkList.Contains(1))
+		{
+			invulnerable = true;
+			Health = 1;
+			PerkList.Clear();
+			invincount = 5;
+			for(var i : GameObject in PerkMachines)
+			{
+				i.SendMessage("CanUse", SendMessageOptions.DontRequireReceiver);
+			}
+			invincible.gameObject.active = true;
+			invintimer = 0;
+		}
+		if(Health != 0)
+		{
+			var colored : float = ((100 - Health) * 2.55) / 255;
+			damageIndicator.GetComponent.<UI.Image>().color = new Color(1f, 1f, 1f, colored);
+		}
+		else{
+			damageIndicator.GetComponent.<UI.Image>().color.a = 1f;
+		}
+		points.text = Points + "";
+		healthCounter.text = Health + "";
+		if(Input.GetButton("Horizontal") || Input.GetButton("Vertical") && !Input.GetKey(KeyCode.LeftShift) && controller != null)
+		{
+			sprinting = false;
+			animator2.Play("PlayerMove");
+			animator2["PlayerMove"].speed = 1;
+			if(controller != null)
+			{
+				controller.SendMessage("NoSprint", SendMessageOptions.DontRequireReceiver);
+			}
+		}
+		if(!Input.GetButton("Horizontal") && Input.GetButton("Vertical") && Input.GetKey(KeyCode.LeftShift) && canSprint == true && !Input.GetButton("Fire2") && controller != null)
+		{
+			sprinting = true;
+			animator2.Play("PlayerMove");
+			animator2["PlayerMove"].speed = 1.25;
+			controller.SendMessage("Sprint", SendMessageOptions.DontRequireReceiver);
+			if(regenTimer >= 0.05)
+			{
+				Stamina -= 0.1;
+				regenTimer = 0;
+			}
+			if(Stamina <= 0.1)
+			{
+				Stamina = -5;
+				canSprint = false;	
+			}
+		}
+		if(Input.GetKey(KeyCode.LeftShift) && canSprint == false && !Input.GetButton("Fire2") && controller != null)
+		{
+			sprinting = false;
+			controller.SendMessage("NoSprint", SendMessageOptions.DontRequireReceiver);
+			animator2.Play("PlayerMove");
+			animator2["PlayerMove"].speed = 1;
+		}
+	}
+	if(!paused && uName != ""){
 		if(oldPoints != Points){
 			if(oldPoints > Points){
 				uiCarrier.SendMessage("BoughtItem", Points - oldPoints, SendMessageOptions.DontRequireReceiver);
@@ -680,16 +793,7 @@ function Update () {
 		{
 			uiSlot42.gameObject.active = false;
 		}
-		if(Health != 0)
-		{
-			var colored : float = ((100 - Health) * 2.55) / 255;
-			damageIndicator.GetComponent.<UI.Image>().color = new Color(1f, 1f, 1f, colored);
-		}
-		else{
-			damageIndicator.GetComponent.<UI.Image>().color.a = 1f;
-		}
-		points.text = Points + "";
-		healthCounter.text = Health + "";
+
 		if(equipped == "gun" && gunequipped == 1)
 		{
 			ammoCounter.text = uAmmo + "/" + uReserve;
@@ -920,26 +1024,6 @@ function Update () {
 				controller.SendMessage("CantSprint", SendMessageOptions.DontRequireReceiver);
 			}
 		}
-		if(!Input.GetKey(KeyCode.LeftShift) && Stamina != 10)
-		{
-			if(regenTimer >= 0.05)
-			{
-				Stamina += 0.2;
-				regenTimer = 0;
-			}
-		}
-		if(Stamina > 10)
-		{
-			Stamina = 10;
-		}
-		if(Stamina > 0)
-		{
-			canSprint = true;
-			if(controller != null)
-			{
-				controller.SendMessage("CanSprint", SendMessageOptions.DontRequireReceiver);
-			}
-		}
 		if(uAmmo > uMaxClip)
 		{
 			uAmmo = uMaxClip;
@@ -977,46 +1061,6 @@ function Update () {
 					healthtimer = 0;
 				}
 			}
-		}
-		if(Health <= 0 && !PerkList.Contains(1) && dead == false)
-		{
-			if(dead == false)
-			{
-				healthtimer = 0;
-				textColor.normal.textColor.a = 0;
-			}
-			deadtimer += Time.deltaTime;
-			dead = true;
-			Health = 0;
-			if(gamecontroller != null)
-			{
-				gamecontroller.SendMessage("Dead", Round, SendMessageOptions.DontRequireReceiver);
-			}
-			transform.SendMessage("Dead", SendMessageOptions.DontRequireReceiver);
-			if(controller != null)
-			{
-				controller.SendMessage("Dead", SendMessageOptions.DontRequireReceiver);
-			}
-			animator1.gameObject.active = false;
-			PerkList.Clear();
-			if(deadtimer >= 3)
-			{
-				Application.LoadLevel("Menu");
-			}
-			
-		}
-		else if(Health <= 0 && PerkList.Contains(1))
-		{
-			invulnerable = true;
-			Health = 1;
-			PerkList.Clear();
-			invincount = 5;
-			for(var i : GameObject in PerkMachines)
-			{
-				i.SendMessage("CanUse", SendMessageOptions.DontRequireReceiver);
-			}
-			invincible.gameObject.active = true;
-			invintimer = 0;
 		}
 		if(invulnerable == true)
 		{
@@ -1169,40 +1213,7 @@ function Update () {
 			}
 			animator2.CrossFade("PlayerIdle");
 		}
-		if(Input.GetButton("Horizontal") || Input.GetButton("Vertical") && !Input.GetKey(KeyCode.LeftShift) && controller != null)
-		{
-			sprinting = false;
-			animator2.Play("PlayerMove");
-			animator2["PlayerMove"].speed = 1;
-			if(controller != null)
-			{
-				controller.SendMessage("NoSprint", SendMessageOptions.DontRequireReceiver);
-			}
-		}
-		if(!Input.GetButton("Horizontal") && Input.GetButton("Vertical") && Input.GetKey(KeyCode.LeftShift) && canSprint == true && !Input.GetButton("Fire2") && controller != null)
-		{
-			sprinting = true;
-			animator2.Play("PlayerMove");
-			animator2["PlayerMove"].speed = 1.25;
-			controller.SendMessage("Sprint", SendMessageOptions.DontRequireReceiver);
-			if(regenTimer >= 0.05)
-			{
-				Stamina -= 0.1;
-				regenTimer = 0;
-			}
-			if(Stamina <= 0.1)
-			{
-				Stamina = -5;
-				canSprint = false;	
-			}
-		}
-		if(Input.GetKey(KeyCode.LeftShift) && canSprint == false && !Input.GetButton("Fire2") && controller != null)
-		{
-			sprinting = false;
-			controller.SendMessage("NoSprint", SendMessageOptions.DontRequireReceiver);
-			animator2.Play("PlayerMove");
-			animator2["PlayerMove"].speed = 1;
-		}
+
 		if(sprinting == true)
 		{
 			if(gunequipped == 1)
@@ -2563,10 +2574,11 @@ function FireGun () {
 							hit.transform.GetComponent.<TargetScript>().Shot();
 							hits += 1;
 						}
-						//var spark = Instantiate(shot, hit.point, shot.rotation);
-						//spark.gameObject.layer = 11;
 						else{
 							hits = 3;
+							var spark = Instantiate(shot, hit.point, shot.rotation);
+							spark.gameObject.SetActive(true);
+							spark.gameObject.layer = 11;
 							if(lasthit != null)
 							{
 								lasthit.gameObject.layer = 15;
@@ -2648,6 +2660,9 @@ function FireGun () {
 						}
 						else{
 							hits2 = 3;
+							var spark2 = Instantiate(shot, hit2.point, shot.rotation);
+							spark2.gameObject.SetActive(true);
+							spark2.gameObject.layer = 11;
 							if(lasthit2 != null){
 								lasthit2.gameObject.layer = 15;
 								lasthit2 = null;
@@ -2656,7 +2671,6 @@ function FireGun () {
 					}
 					else
 					{
-
 					}
 				}
 				if(lasthit2 != null){
