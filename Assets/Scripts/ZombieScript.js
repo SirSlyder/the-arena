@@ -2,8 +2,9 @@
 
 import System.Collections.Generic;
 
-var priorbag : Transform;
+var isTank : boolean = false;
 
+var priorbag : Transform;
 
 var gibsource : AudioSource;
 var deathsounds : List.<AudioClip>;
@@ -11,6 +12,8 @@ var attacksounds : List.<AudioClip>;
 var moansounds : List.<AudioClip>;
 var moantimer : float;
 var moantime : int;
+
+var stalking : boolean;
 
 var stopped : boolean;
 
@@ -43,6 +46,7 @@ private var deaded : boolean = false;
 var damagedfor : float;
 var spawner : GameObject[];
 var expectedMoveSpeed : float;
+
 var head : Rigidbody;
 var mspine : Rigidbody;
 var larm : Rigidbody;
@@ -55,22 +59,11 @@ var lknee : Rigidbody;
 var rhip : Rigidbody;
 var rknee : Rigidbody;
 
-var headm : Transform;
-var mspinem : Transform;
-var larmm : Transform;
-var lelbowm : Transform;
-var rarmm : Transform;
-var relbowm : Transform;
-var pelvism : Transform;
-var lhipm : Transform;
-var lkneem : Transform;
-var rhipm : Transform;
-var rkneem : Transform;
+var child : Transform;
 
 var pvalue : int;
 
 var lasthit : Rigidbody = null;
-var lasthit2 : Transform = null;
 
 var player : Transform;
 
@@ -112,6 +105,28 @@ function Awake () {
 	anim2["attack1"].wrapMode = WrapMode.Once;
 	anim2["attack2"].layer = 2;
 	anim2["attack2"].wrapMode = WrapMode.Once;
+	head.isKinematic = true;
+	mspine.isKinematic = true;
+	larm.isKinematic = true;
+	lelbow.isKinematic = true;
+	rarm.isKinematic = true;
+	relbow.isKinematic = true;
+	pelvis.isKinematic = true;
+	lhip.isKinematic = true;
+	lknee.isKinematic = true;
+	rhip.isKinematic = true;
+	rknee.isKinematic = true;
+	head.transform.tag = "Enemy";
+	mspine.transform.tag = "Enemy";
+	larm.transform.tag = "Enemy";
+	lelbow.transform.tag = "Enemy";
+	rarm.transform.tag = "Enemy";
+	relbow.transform.tag = "Enemy";
+	pelvis.transform.tag = "Enemy";
+	lhip.transform.tag = "Enemy";
+	lknee.transform.tag = "Enemy";
+	rhip.transform.tag = "Enemy";
+	rknee.transform.tag = "Enemy";
 }
 
 
@@ -147,6 +162,21 @@ function Update () {
 		{
 			if(dead == false)
 			{
+				if(stalking == false)
+				{
+					GetComponent(NavMeshAgent).Resume();
+				} else if(stalking && !child.GetComponent.<Renderer>().isVisible){
+					GetComponent(NavMeshAgent).Resume();
+				}
+			}
+		}
+		if(stalking){
+			if(child.GetComponent.<Renderer>().isVisible){
+				Debug.Log("Visible.");
+				anim2.Stop();
+				GetComponent(NavMeshAgent).Stop(true);
+			}
+			else{
 				GetComponent(NavMeshAgent).Resume();
 			}
 		}
@@ -193,7 +223,13 @@ function Update () {
 	{
 		if(touching == null && dead == false && isJumping == false)
 		{
-			GetComponent(NavMeshAgent).Resume();
+			if(!stalking)
+			{
+				GetComponent(NavMeshAgent).Resume();
+			} else if(stalking && !child.GetComponent.<Renderer>().isVisible)
+			{
+				GetComponent(NavMeshAgent).Resume();
+			}
 		}
 	}
 	if(faint == true)
@@ -249,11 +285,6 @@ function Update () {
 	{
 		dead = true;
 		anim2.Stop();
-		var deathchance : int = Random.Range(0, 5);
-		if(deathchance >= 4)
-		{
-			anim2.Play("death1");
-		}
 		grenadeChance = Random.Range(0, 10);
 		if(grenadeChance >= 8 && grenadeChance < 9)
 		{
@@ -271,16 +302,10 @@ function Update () {
 		{
 			GetComponent(NavMeshAgent).Stop(true);
 		}
-		if(health <= -25){
-			if(lasthit2 != null)
-			{
-				gibsource.Play();
-				lasthit2.Find("Flare").gameObject.active = true;
-				lasthit2.Find("Flare").parent = this.transform;
-				Destroy(lasthit2.gameObject);
-			}
+		if(isTank == false)
+		{
+			GameObject.Find("Host").GetComponent.<GameHost>().ZedDown();
 		}
-		GameObject.Find("Host").GetComponent.<GameHost>().ZedDown();
 		if(lasthit != head && lasthit != null)
 		{
 			if(damagedfor != 0)
@@ -346,13 +371,20 @@ function Update () {
         	canGet = true;
         	target = GameObject.FindGameObjectWithTag("Player").transform;
         } 
+        if(GetComponent(NavMeshAgent).remainingDistance > 25){
+        	var spawners : GameObject[];
+        	spawners = GameObject.FindGameObjectsWithTag("Spawner");
+        	for(var i : GameObject in spawners){
+        		i.SendMessage("Despawn", SendMessageOptions.DontRequireReceiver);
+        	}
+        }
         if(expectedMoveSpeed < 4)
         {
         	anim2["walk"].speed = (moveSpeed * walkanimspeed);
 			anim2.Play("walk");
 		}
 		else{
-			anim2["run"].speed = (moveSpeed * walkanimspeed / 3);
+			anim2["run"].speed = (moveSpeed * walkanimspeed / 2);
 			anim2.Play("run");
 		}
 	}
@@ -388,6 +420,11 @@ function FindClosestEnemy () : GameObject {
 	return closest;
 }
 
+function Stalk () {
+	stalking = true;
+	GetComponent.<AudioSource>().volume = 0;
+}
+
 function FindClosestPlayer () : GameObject {
 	// Find all game objects with tag Enemy
 	var candidates : GameObject[];
@@ -414,18 +451,35 @@ function Damaged (damage : float)
 	{
 		damagedfor = damage / 10;
 		health -= damage;
-		if(health > 0)
+		if(isTank == false)
 		{
-			player.GetComponent.<WeaponScript>().HitPoints();
+			if(health > 0)
+			{
+				player.GetComponent.<WeaponScript>().HitPoints();
+			}
+			if(health <= 0)
+			{
+				player.GetComponent.<WeaponScript>().KillPoints(pvalue);
+				if(lasthit == head){
+					player.GetComponent.<WeaponScript>().Headshot();
+				}
+			}
 		}
-		if(health <= 0)
-		{
-			player.GetComponent.<WeaponScript>().KillPoints(pvalue);
-			if(lasthit == head){
-				player.GetComponent.<WeaponScript>().Headshot();
+		else{
+			if(health <= 0)
+			{
+				player.GetComponent.<WeaponScript>().KillPoints(500);
+				if(lasthit == head){
+					player.GetComponent.<WeaponScript>().Headshot();
+				}
 			}
 		}
 	}
+}
+
+function TankSpeed () {
+	expectedMoveSpeed = Random.Range(1.5, 1.75);
+	isTank = true;
 }
 
 function Normal () {
@@ -459,7 +513,7 @@ function StopJump () {
 
 function OnTriggerStay (other : Collider)
 {
-	if(health > 0 && attacktimer >= anim2["attack1"].length / walkanimspeed && player != null && target != null)
+	if(health > 0 && attacktimer >= anim2["attack1"].length / 0.75 && player != null && target != null)
 	{
 		if(other.tag != "Enemy" && other.gameObject.layer != 9)
 		{
@@ -511,8 +565,16 @@ function Attack ()
 		yield WaitForSeconds(anim2["attack1"].length / 2);
 		if(touching != null && health > 0)
 		{
-			touching.SendMessage("PlayerHit", SendMessageOptions.DontRequireReceiver);
-			//Debug.Log("Hit " + touching.name);
+			if(isTank == false)
+			{
+				touching.SendMessage("PlayerHit", SendMessageOptions.DontRequireReceiver);
+				//Debug.Log("Hit " + touching.name);
+			}
+			else if(isTank == true)
+			{
+				touching.SendMessage("PlayerHitTank", SendMessageOptions.DontRequireReceiver);
+				//Debug.Log("Hit " + touching.name);
+			}
 		}
 		yield WaitForSeconds(anim2["attack1"].length / 2);
 		if(dead == false && touching == null && isJumping == false && distance > 1)
@@ -528,13 +590,11 @@ function Attack ()
 			touching.SendMessage("PlayerHit", SendMessageOptions.DontRequireReceiver);
 			//Debug.Log("Hit " + touching.name);
 		}
-		yield WaitForSeconds(anim2["attack2"].length * 0.1666666666);
-		if(touching != null && health > 0)
+		else if(isTank == true)
 		{
-			touching.SendMessage("PlayerHit", SendMessageOptions.DontRequireReceiver);
+			touching.SendMessage("PlayerHitTank", SendMessageOptions.DontRequireReceiver);
 			//Debug.Log("Hit " + touching.name);
 		}
-		yield WaitForSeconds(anim2["attack2"].length * 0.1666666666);
 		if(dead == false && touching == null && isJumping == false && distance > 1)
 		{
 			GetComponent(NavMeshAgent).Resume();
@@ -543,9 +603,13 @@ function Attack ()
 	}
 }
 
-function Health (heal : int)
+function Health (heal : float)
 {
 	health = 100 + (50 * (heal - 1));
+}
+
+function HealthWeak(){
+	health = 1;
 }
 
 function Explode (damage : float)
@@ -561,10 +625,12 @@ function Launched (launched : Transform)
 		if(launched != null)
 		{
 			launched.SendMessage("Push", GetComponent.<Rigidbody>(), SendMessageOptions.DontRequireReceiver);
-			lasthit2 = launched;
 		}
-		GameObject.Find("Host").GetComponent.<GameHost>().ZedDown();
 	}
+}
+
+function Modify (hp : float){
+	health = health * hp;
 }
 
 function Damage (part : String)
@@ -573,43 +639,36 @@ function Damage (part : String)
 	if(part == "head")
 	{
 		lasthit = head;
-		lasthit2 = headm;
 		pvalue = 100;
 	}
 	if(part == "mspine")
 	{
 		lasthit = mspine;
-		lasthit2 = mspinem;
 		pvalue = 70;
 	}
 	if(part == "pelvis")
 	{
 		lasthit = mspine;
-		lasthit2 = mspinem;
 		pvalue = 70;
 	}
 	if(part == "larm")
 	{
 		lasthit = larm;
-		lasthit2 = larmm;
 		pvalue = 50;
 	}
 	if(part == "rarm")
 	{
 		lasthit = rarm;
-		lasthit2 = rarmm;
 		pvalue = 50;
 	}
 	if(part == "lleg")
 	{
 		lasthit = lknee;
-		lasthit2 = lkneem;
 		pvalue = 50;
 	}
 	if(part == "rleg")
 	{
 		lasthit = rknee;
-		lasthit2 = rkneem;
 		pvalue = 50;
 	}
 	if(!anim2.IsPlaying("recoil1") && !anim2.IsPlaying("recoil2") && dead == false)

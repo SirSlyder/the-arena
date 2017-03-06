@@ -4,6 +4,7 @@ var player : Transform;
 private var dead : boolean = false;
 var moveScript : MonoBehaviour;
 var script2 : MonoBehaviour;
+var fragiled : boolean = false;
 
 function Dead () {
 	player.GetComponent.<BoxCollider>().enabled = true;
@@ -19,10 +20,26 @@ function Explode (dam : float)
 }
 
 function PlayerHit () {
-	if(dead == false)
+	if(dead == false && fragiled == false)
 	{
 		player.SendMessage("PlayerHit", SendMessageOptions.DontRequireReceiver);
 	}
+	else if(fragiled == true){
+		player.SendMessage("Dead", SendMessageOptions.DontRequireReceiver);
+	}
+}
+
+function PlayerHitTank(){
+	if(dead == false && fragiled == false)
+	{
+		player.SendMessage("PlayerHitTank", SendMessageOptions.DontRequireReceiver);
+	} else if(fragiled == true){
+		player.SendMessage("Dead", SendMessageOptions.DontRequireReceiver);
+	}
+}
+
+function Fragile(){
+	fragiled = true;
 }
 
 function Grenade (id : int) {

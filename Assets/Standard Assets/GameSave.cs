@@ -7,7 +7,11 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 
 public class GameSave : MonoBehaviour {
-	
+
+	public int[] modifiers;
+	public GameObject[] spawners;
+	public GameHost host;
+
 	public static GameSave control;
 	
 	static public int Level;
@@ -95,12 +99,37 @@ public class GameSave : MonoBehaviour {
 				}
 				player.SendMessage ("Sensitivity", Sensitivity, SendMessageOptions.DontRequireReceiver);
 				player.SendMessage ("Inverted", inverted, SendMessageOptions.DontRequireReceiver);
+				if (modifiers [0] == 1) {
+					player.parent.SendMessage ("Fragile", SendMessageOptions.DontRequireReceiver);
+				}
+				if (modifiers [2] == 1) {
+					player.SendMessage ("Loan", SendMessageOptions.DontRequireReceiver);
+					Debug.Log ("Loaned");
+				}
 			}
 		}
 		AudioListener.volume = Volume;
 	}
 
 	void Update () {
+		if (Input.GetKeyDown (KeyCode.Escape)) {
+			if (sensebar == null) {
+				GameObject sensebarg;
+				sensebarg = GameObject.Find ("Sensitivity");
+				sensebar = sensebarg.GetComponent<Slider> ();
+				sensebar.value = Sensitivity;
+			}
+			if (invert == null) {
+				invert = GameObject.Find ("InvertMouse").GetComponent<Toggle> ();
+				invert.isOn = inverted;
+			}
+			if (volbar == null) {
+				GameObject volbarg;
+				volbarg = GameObject.Find ("Volume");
+				volbar = volbarg.GetComponent<Slider> ();
+				volbar.value = Volume;
+			}
+		}
 		if (fps) {
 			fpstext.enabled = true;
 			fpstext.text = (Mathf.RoundToInt(1.0f / Time.smoothDeltaTime)).ToString();
@@ -111,16 +140,29 @@ public class GameSave : MonoBehaviour {
 				Application.Quit();
 			}
 		}
-		if (Application.loadedLevelName != "Menu") {
+		if (Application.loadedLevel != 0) {
+			if (host == null) {
+				host = GameObject.Find ("Host").GetComponent<GameHost> ();
+				if (modifiers [8] == 1) {
+					host.tank = true;
+				}
+				if (modifiers [1] == 1) {
+					host.SendMessage("Weakling", SendMessageOptions.DontRequireReceiver);
+				}
+			}
 			if (player == null) {
 				player = GameObject.FindGameObjectWithTag ("MainCamera").transform;
-				if (player.parent != null) {
-					player.parent.SendMessage ("Sensitivity", Sensitivity, SendMessageOptions.DontRequireReceiver);
+				if (modifiers [0] == 1) {
+					player.parent.SendMessage ("Fragile", SendMessageOptions.DontRequireReceiver);
 				}
-				player.SendMessage ("Sensitivity", Sensitivity, SendMessageOptions.DontRequireReceiver);
-				player.SendMessage ("Inverted", inverted, SendMessageOptions.DontRequireReceiver);
-				AudioListener.volume = Volume;
+
 			}
+			if (player.parent != null) {
+				player.parent.SendMessage ("Sensitivity", Sensitivity, SendMessageOptions.DontRequireReceiver);
+			}
+			player.SendMessage ("Sensitivity", Sensitivity, SendMessageOptions.DontRequireReceiver);
+			player.SendMessage ("Inverted", inverted, SendMessageOptions.DontRequireReceiver);
+			AudioListener.volume = Volume;
 		}
 		if (Input.GetKeyDown (KeyCode.Tab)) {
 			scored = !scored;
@@ -151,12 +193,86 @@ public class GameSave : MonoBehaviour {
 			foreach (GameObject i in doors) {
 				maxDoors += 1;
 			}
+			host = GameObject.Find ("Host").GetComponent<GameHost> ();
+			if (modifiers [8] == 1) {
+				host.tank = true;
+			}
+			if (modifiers [1] == 1) {
+				host.SendMessage("Weakling", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [2] == 1) {
+				host.SendMessage ("Loan", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [4] == 1) {
+				host.SendMessage ("Nuclear", SendMessageOptions.DontRequireReceiver);
+			}
 		}
 		fpstext = GameObject.FindGameObjectWithTag ("FPSCounter").GetComponent<Text>();
 		if (fps) {
 			fpstext.enabled = true;
 		} else {
 			fpstext.enabled = false;
+		}
+	}
+
+	public void Prep(){
+		player = null;
+		if (Application.loadedLevelName != "Menu") {
+			currentDoors = 0;
+			currentHeadshots = 0;
+			currentKills = 0;
+			currentWaves = 0;
+			maxDoors = 0;
+			GameObject[] doors;
+			doors = GameObject.FindGameObjectsWithTag ("Door");
+			foreach (GameObject i in doors) {
+				maxDoors += 1;
+			}
+			host = GameObject.Find ("Host").GetComponent<GameHost> ();
+
+			if (modifiers [1] == 1) {
+				host.SendMessage("Weakling", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [2] == 1) {
+				host.SendMessage ("Loan", SendMessageOptions.DontRequireReceiver);
+				Debug.Log ("Loaned");
+			}
+			if (modifiers [3] == 1) {
+				host.SendMessage ("PerkDisable", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [4] == 1) {
+				host.SendMessage ("Nuclear", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [5] == 1) {
+				host.SendMessage ("Slug", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [6] == 1) {
+				host.SendMessage ("Tranquilized", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [7] == 1) {
+				host.SendMessage ("Adrenalised", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [8] == 1) {
+				host.tank = true;
+			}
+			if (modifiers [9] == 1) {
+				host.SendMessage ("GivePerks", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [10] == 1) {
+				host.SendMessage ("RevitaInfinite", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [11] == 1) {
+				host.SendMessage ("Hemophilia", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [12] == 1) {
+				host.SendMessage ("LightsOut", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [13] == 1) {
+				host.SendMessage ("Stalk", SendMessageOptions.DontRequireReceiver);
+			}
+			if (modifiers [14] == 1) {
+				host.SendMessage ("HideHUD", SendMessageOptions.DontRequireReceiver);
+			}
 		}
 	}
 

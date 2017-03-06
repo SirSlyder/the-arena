@@ -13,6 +13,7 @@ var material : Material;
 var gtype : g2Type;
 var gelement : g2Element;
 var body : Transform;
+var Host : GameObject;
 
 public enum g2Type {Explosive = 1, Spread = 2}
 public enum g2Element {Explosive = 1, Fire = 2, Shock = 3, Water = 4, Petrol = 5}
@@ -28,11 +29,14 @@ var grenadeTypes : List.<GrenadeType>;
 
 function Awake () {
 	particle = transform.Find("Explosion").GetComponent.<Transform>();
+	Host = GameObject.Find("Host");
+	Host.SendMessage("Nucleared", transform, SendMessageOptions.DontRequireReceiver); 
 }
 
 function Start () {
 	active = true;
 }
+
 
 function Update () {
 	airtime += Time.deltaTime;
@@ -77,4 +81,9 @@ function Grenade (type : int) {
 			body.GetComponent.<MeshRenderer>().materials[1].color = i.Colour;
 		}
 	}
+}
+
+function Nuclear () {
+	radius = radius * 3;
+	Debug.Log("Nucleared.");
 }

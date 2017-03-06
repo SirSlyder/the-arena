@@ -12,6 +12,8 @@ var speedTest : float;
 var speedTime : float;
 
 @Header ("UI Related Variables")
+
+var hud : GameObject;
 var uiSlot1 : UI.Image;
 var uiSlot2 : UI.Image;
 var uiSlot2two : UI.Image;
@@ -100,6 +102,7 @@ var zedcount : int;
 
 var Points : int;
 var oldPoints : int;
+var loan : boolean = false;
 
 var safeArea : Texture2D;
 
@@ -169,6 +172,8 @@ var healthcooldowntimer : float;
 var DamageResist : float;
 var Health : int = 100;
 
+var hemophilia : boolean = false;
+
 // ---------- GRENADE VARIABLES/CLASSES ----------
 
 var grenadeS1 : UI.Image;
@@ -177,6 +182,8 @@ var grenadeS3 : UI.Image;
 var grenadeS4 : UI.Image;
 
 @Header ("Grenade Variables")
+
+var nuclear : boolean;
 
 var grenadeExplode : GameObject;
 var grenadeCook : float;
@@ -398,7 +405,11 @@ public class GunItem
 	var rTime : int;
 	var sPos : Vector3;
 	var sRot : Vector3;
+	var isLaser : boolean = false;
+	var muzzle : Transform;
 }
+
+var laserTracer : Transform;
 
 var aimTransform : Transform;
 
@@ -414,8 +425,9 @@ public var FireArms : GunItem[];
 public var AimTowards : AimMove[];
 
 function Awake () {
+	GameObject.Find("GameController").SendMessage("Player", transform, SendMessageOptions.DontRequireReceiver);
 	spinnerhost = GameObject.Find("Spinners").transform;
-	uiRoundText = gameObject.Find("RoundText").GetComponent.<UI.Text>();
+	//uiRoundText = gameObject.Find("RoundText").GetComponent.<UI.Text>();
 	GameObject.Find("Host").GetComponent.<GameHost>().FindPlayers();
 	PerkMachines = GameObject.FindGameObjectsWithTag("PerkMachine"); 
 	gameObject.active = false;
@@ -425,6 +437,10 @@ function Awake () {
 	{
 		animator3["Aim" + uName].layer = 1;
 	}
+	animator2["PlayerMove"].layer = 2;
+	animator2 ["PlayerMove"].wrapMode = WrapMode.Loop;
+	animator2["PlayerIdle"].layer = 2;
+	animator2 ["PlayerIdle"].wrapMode = WrapMode.Loop;
 }
 
 function Start () {
@@ -472,15 +488,22 @@ function Update () {
 	}
 	if(!paused)
 	{
+		if(dead){
+			flashlight.gameObject.active = false;
+			deadtimer += Time.deltaTime;
+			if(deadtimer >= 3)
+			{
+				Application.LoadLevel("Menu");
+			}
+		}
 		if(Health <= 0 && !PerkList.Contains(1) && dead == false)
 		{
+			
 			if(dead == false)
 			{
 				healthtimer = 0;
 				textColor.normal.textColor.a = 0;
 			}
-			deadtimer += Time.deltaTime;
-			dead = true;
 			Health = 0;
 			if(gamecontroller != null)
 			{
@@ -493,12 +516,9 @@ function Update () {
 			}
 			animator1.gameObject.active = false;
 			PerkList.Clear();
-			if(deadtimer >= 3)
-			{
-				Application.LoadLevel("Menu");
-			}
-			
+			dead = true;
 		}
+
 		else if(Health <= 0 && PerkList.Contains(1))
 		{
 			invulnerable = true;
@@ -525,7 +545,7 @@ function Update () {
 		if(Input.GetButton("Horizontal") || Input.GetButton("Vertical") && !Input.GetKey(KeyCode.LeftShift) && controller != null)
 		{
 			sprinting = false;
-			animator2.Play("PlayerMove");
+			animator2.CrossFade("PlayerMove");
 			animator2["PlayerMove"].speed = 1;
 			if(controller != null)
 			{
@@ -535,7 +555,7 @@ function Update () {
 		if(!Input.GetButton("Horizontal") && Input.GetButton("Vertical") && Input.GetKey(KeyCode.LeftShift) && canSprint == true && !Input.GetButton("Fire2") && controller != null)
 		{
 			sprinting = true;
-			animator2.Play("PlayerMove");
+			animator2.CrossFade("PlayerMove");
 			animator2["PlayerMove"].speed = 1.25;
 			controller.SendMessage("Sprint", SendMessageOptions.DontRequireReceiver);
 			if(regenTimer >= 0.05)
@@ -667,6 +687,32 @@ function Update () {
 				cam.fieldOfView = 60;
 				cam2.fieldOfView = 60;
 				cam3.fieldOfView = 60;
+			}
+		}
+		if(equipped == "gun" && Input.GetButton("Fire2")){
+			if(gunequipped == 1){
+				if(cam.fieldOfView != uFovZoom){
+					cam.fieldOfView -= 1;
+					cam2.fieldOfView -= 1;
+					cam3.fieldOfView -= 1;
+				}
+				if(cam.fieldOfView < uFovZoom){
+					cam.fieldOfView = uFovZoom;
+					cam2.fieldOfView = uFovZoom;
+					cam3.fieldOfView = uFovZoom;
+				}
+			}
+			else if(gunequipped == 2){
+				if(cam.fieldOfView != u2fovZoom){
+					cam.fieldOfView -= 1;
+					cam2.fieldOfView -= 1;
+					cam3.fieldOfView -= 1;
+				}
+				if(cam.fieldOfView < u2fovZoom){
+					cam.fieldOfView = u2fovZoom;
+					cam2.fieldOfView = u2fovZoom;
+					cam3.fieldOfView = u2fovZoom;
+				}
 			}
 		}
 		else if(equipped == "melee")
@@ -815,7 +861,7 @@ function Update () {
 		{
 			if(fireCool >= 0.1)
 			{
-				fireaccuracyinc -= (Time.deltaTime / 15);
+				fireaccuracyinc -= (Time.deltaTime / 10);
 			}
 		}
 		if(fireaccuracyinc < 0)
@@ -1051,7 +1097,7 @@ function Update () {
 		}
 		healthtimer += Time.deltaTime;
 		healthcooldowntimer += Time.deltaTime;
-		if(healthcooldowntimer >= 5)
+		if(healthcooldowntimer >= 5 && hemophilia == false)
 		{
 			if(Health < 100 && Health > 0)
 			{
@@ -1753,6 +1799,10 @@ function GrenadeThrow () {
 	{
 		gclone = Instantiate(Grenades[GrenadeList[grenadeEquipped - 1] - 1].model.GetComponent.<Rigidbody>(), transform.position, transform.rotation);
 	}
+	if(nuclear == true){
+		//gclone.SendMessage("Nuclear");
+		//Debug.Log("Nucleared.");
+	}
 	gclone.gameObject.active = true;
 	gclone.velocity = transform.TransformDirection(Vector3.forward * 12.5);
 	if(grenadeCook < 5 && Grenades[GrenadeList[grenadeEquipped - 1] - 1].type == 1)
@@ -2031,22 +2081,28 @@ function Melee (Item : int)
 }
 
 function HitPoints () {
-	Points += 10;
-	uiCarrier.SendMessage("GainPoints", 10, SendMessageOptions.DontRequireReceiver);
+	if(!loan){
+		Points += 10;
+		uiCarrier.SendMessage("GainPoints", 10, SendMessageOptions.DontRequireReceiver);
+	}
 }
 
 function RepairPoints () {
-	Points += 10;
-	uiCarrier.SendMessage("GainPoints", 10, SendMessageOptions.DontRequireReceiver);
+	if(!loan){
+		Points += 10;
+		uiCarrier.SendMessage("GainPoints", 10, SendMessageOptions.DontRequireReceiver);
+	}
 }
 
 function KillPoints (points : int) {
-	Points += points;
-	if(gamecontroller != null)
-	{
-		gamecontroller.SendMessage("Kill", SendMessageOptions.DontRequireReceiver);
+	if(!loan){
+		Points += points;
+		if(gamecontroller != null)
+		{
+			gamecontroller.SendMessage("Kill", SendMessageOptions.DontRequireReceiver);
+		}
+		uiCarrier.SendMessage("GainPoints", points, SendMessageOptions.DontRequireReceiver);
 	}
-	uiCarrier.SendMessage("GainPoints", points, SendMessageOptions.DontRequireReceiver);
 }
 
 function Headshot(){
@@ -2451,6 +2507,10 @@ function Perk (Type : int)
 	}
 }
 
+function PerkInsta(type : int){
+	PerkList.Add(type);
+}
+
 function Door () {
 	if(gamecontroller != null)
 	{
@@ -2486,6 +2546,19 @@ function PlayerHit () {
 	if(invulnerable == false)
 	{
 		Health -= 55 / DamageResist;
+		healthtimer = -1;
+		if(Health < 0)
+		{
+			Health = 0;
+		}
+		healthcooldowntimer = 0;
+	}
+}
+
+function PlayerHitTank () {
+	if(invulnerable == false)
+	{
+		Health -= 140 / DamageResist;
 		healthtimer = -1;
 		if(Health < 0)
 		{
@@ -2542,6 +2615,10 @@ function FireGun () {
 				var rotate : Quaternion = aimer.rotation;
 				var lasthit : Transform = null;
 				var pos : Vector3 = aimer.position;
+				var pos2 : Vector3;
+				if(FireArms[uID - 1].isLaser){
+					pos2 = FireArms[uID - 1].muzzle.position;
+				}
 				while(hits != 3)
 				{
 					if(Physics.Raycast (pos, rotate * Vector3.forward, hit, 500, layerMask))
@@ -2552,8 +2629,14 @@ function FireGun () {
 						//Debug.Log("I've hit " + hit.transform.name);
 						if(hit.transform.tag == "Enemy")
 						{
+							if(FireArms[uID - 1].isLaser){
+								var laserClone = Instantiate(laserTracer, pos2, transform.rotation);
+								laserClone.gameObject.active = true;
+								laserClone.SendMessage("Point", hit.point, SendMessageOptions.DontRequireReceiver);
+							}
 							lasthit = hit.transform;
 							pos = lasthit.position;
+							pos2 = lasthit.position;
 							lasthit.gameObject.layer = 16;
 							//Debug.Log("Blood");
 							var bClone = Instantiate(bloodObj, hit.transform.position, transform.rotation);
@@ -2564,6 +2647,11 @@ function FireGun () {
 						}
 						else if(hit.transform.tag == "Target")
 						{
+							if(FireArms[uID - 1].isLaser){
+								var laserClone2 = Instantiate(laserTracer, FireArms[uID - 1].muzzle.position, transform.rotation);
+								laserClone2.gameObject.active = true;
+								laserClone2.SendMessage("Point", hit.point, SendMessageOptions.DontRequireReceiver);
+							}
 							lasthit = hit.transform;
 							pos = lasthit.position;
 							lasthit.gameObject.layer = 16;
@@ -2575,6 +2663,11 @@ function FireGun () {
 							hits += 1;
 						}
 						else{
+							if(FireArms[uID - 1].isLaser){
+								var laserClone3 = Instantiate(laserTracer, FireArms[uID - 1].muzzle.position, transform.rotation);
+								laserClone3.gameObject.active = true;
+								laserClone3.SendMessage("Point", hit.point, SendMessageOptions.DontRequireReceiver);
+							}
 							hits = 3;
 							var spark = Instantiate(shot, hit.point, shot.rotation);
 							spark.gameObject.SetActive(true);
@@ -2635,23 +2728,34 @@ function FireGun () {
 				var rotate2 : Quaternion = aimer.rotation;
 				var ip2 : int = 1;
 				var lasthit2 : Transform;
-				var pos2 : Vector3 = aimer.position;
+				var pos3 : Vector3 = aimer.position;
+				var pos4 : Vector3;
+				if(FireArms[u2ID - 1].isLaser){
+					pos4 = FireArms[u2ID - 1].muzzle.position;
+				}
 				var hits2 : int = 0;
 				if(intendedPellets2 > 1){
 					hits2 = 2;
 				}
 				while(hits2 != 3)
 				{
-					if(Physics.Raycast (pos2, rotate2 * Vector3.forward, hit2, 500, layerMask))
+					if(Physics.Raycast (pos3, rotate2 * Vector3.forward, hit2, 500, layerMask))
 					{
+						
 						if(lasthit2 != null){
 							lasthit2.gameObject.layer = 15;
 						}
 						//Debug.Log("I've hit " + hit2.transform.name);
 						if(hit2.transform.tag == "Enemy")
 						{
+							if(FireArms[u2ID - 1].isLaser){
+								var laserClone4 = Instantiate(laserTracer, pos4, transform.rotation);
+								laserClone4.gameObject.active = true;
+								laserClone4.SendMessage("Point", hit2.point, SendMessageOptions.DontRequireReceiver);
+							}
 							lasthit2 = hit2.transform;
-							pos2 = lasthit2.position;
+							pos3 = lasthit2.position;
+							pos4 = lasthit2.position;
 							lasthit2.gameObject.layer = 16;
 							//Debug.Log("Blood");
 							var bClone2 = Instantiate(bloodObj, hit2.transform.position, transform.rotation);
@@ -2659,6 +2763,11 @@ function FireGun () {
 							hit2.transform.GetComponent.<BodyPartScript>().Shot((u2Damage * damageMulti * statusEffectMulti) / (1 + (hits2 / 5)));
 						}
 						else{
+							if(FireArms[u2ID - 1].isLaser){
+								var laserClone5 = Instantiate(laserTracer, pos4, transform.rotation);
+								laserClone5.gameObject.active = true;
+								laserClone5.SendMessage("Point", hit2.point, SendMessageOptions.DontRequireReceiver);
+							}
 							hits2 = 3;
 							var spark2 = Instantiate(shot, hit2.point, shot.rotation);
 							spark2.gameObject.SetActive(true);
@@ -2687,11 +2796,46 @@ function FireGun () {
 }
 
 function NewRound(round : int){
+	Grenade(1);
 	coolDown = 5;
 	coolingDown = true;
 	Round = round;
+	if(hemophilia){
+		Health = 100;
+	}
 }
 
 function Rounds(round : int){
 	Round = round;
+}
+
+function Dead () {
+	Health = 0;
+}
+
+function Loan () {
+	Points = 25000;
+	loan = true;
+}
+
+function Nuclear(){
+	nuclear = true;
+}
+
+function Slug(){
+	for(var i : GunItem in FireArms){
+		if(i.Pellets > 1){
+			i.Damage *= i.Pellets;
+			i.Pellets = 1;
+			i.aimReduce = i.Accuracy;
+		}
+	}
+}
+
+function Hemophilia(){
+	hemophilia = true;
+}
+
+function HideHUD(){
+	hud.SetActive(false);
 }

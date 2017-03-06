@@ -10,10 +10,19 @@ var spawntime : float;
 var activated : boolean;
 var zombieLimit : int;
 var sandbag : Transform;
+var tankPref : Transform;
+var weak : boolean = false;
+var tranquilized : boolean = false;
+var adrenalised : boolean = false;
+var stalk : boolean = false;
 
 function Awake () {
 	spawners = GameObject.FindGameObjectsWithTag("Spawner");
 	spawntime = Random.Range(7.0, 12.0);
+}
+
+function Stalk () {
+	stalk = true;
 }
 
 function Update () {
@@ -33,37 +42,99 @@ function Update () {
 				GetComponent.<Animation>().Play("sandSpew");
 			}
 		}
-		if(round >= 2)
+		if(tranquilized == false && adrenalised == false)
 		{
-			var mehfastprobability : float = Random.Range(0, round);
-			if(mehfastprobability > 1.25)
+			if(round >= 2)
 			{
-				clone.gameObject.SendMessage("MehFast", SendMessageOptions.DontRequireReceiver);
+				var mehfastprobability : float = Random.Range(0, round);
+				if(mehfastprobability > 1.25)
+				{
+					clone.gameObject.SendMessage("MehFast", SendMessageOptions.DontRequireReceiver);
+				}
+				else{
+					clone.gameObject.SendMessage("Normal", SendMessageOptions.DontRequireReceiver);
+				}
 			}
-			else{
+			else if(round >= 6)
+			{
+				var fastprobability : int = Random.Range(0, round);
+				if(fastprobability > 2)
+				{
+					clone.gameObject.SendMessage("Fast", SendMessageOptions.DontRequireReceiver);
+				} 
+				else{
+					clone.gameObject.SendMessage("MehFast", SendMessageOptions.DontRequireReceiver);
+				}
+			}
+			else
+			{
 				clone.gameObject.SendMessage("Normal", SendMessageOptions.DontRequireReceiver);
 			}
 		}
-		else if(round >= 6)
-		{
-			var fastprobability : int = Random.Range(0, round);
-			if(fastprobability > 2)
-			{
-				clone.gameObject.SendMessage("Fast", SendMessageOptions.DontRequireReceiver);
-			} 
-			else{
-				clone.gameObject.SendMessage("MehFast", SendMessageOptions.DontRequireReceiver);
-			}
-		}
-		else
+		else if(tranquilized == true)
 		{
 			clone.gameObject.SendMessage("Normal", SendMessageOptions.DontRequireReceiver);
+		} else if(adrenalised == true)
+		{
+			clone.gameObject.SendMessage("Fast", SendMessageOptions.DontRequireReceiver);
 		}
-		clone.gameObject.SendMessage("Health", round, SendMessageOptions.DontRequireReceiver);
+		if(tranquilized == false && adrenalised == false)
+		{
+			if(!weak){
+				clone.gameObject.SendMessage("Health", round, SendMessageOptions.DontRequireReceiver);
+			} else{
+				clone.gameObject.SendMessage("HealthWeak", SendMessageOptions.DontRequireReceiver);
+			}
+		}
+		else if(tranquilized == true){
+			clone.gameObject.SendMessage("Health", round, SendMessageOptions.DontRequireReceiver);
+			clone.gameObject.SendMessage("Modify", 1.5, SendMessageOptions.DontRequireReceiver);
+		} else if(adrenalised == true){
+			clone.gameObject.SendMessage("Health", round, SendMessageOptions.DontRequireReceiver);
+			clone.gameObject.SendMessage("Modify", 0.75, SendMessageOptions.DontRequireReceiver);
+		}
+		if(stalk){
+			clone.gameObject.SendMessage("Stalk", SendMessageOptions.DontRequireReceiver);
+		}
 		for (var i : GameObject in spawners)
 		{
 			i.SendMessage("UsedZombie", SendMessageOptions.DontRequireReceiver);
 		}
+	}
+}
+
+function Weak(){
+	weak = true;
+}
+
+function Tranquilized(){
+	tranquilized = true;
+	adrenalised = false;
+}
+
+function Adrenalised(){
+	tranquilized = false;
+	adrenalised = true;
+}
+
+function SpawnTank(){
+	if(activated){
+		var clone = Instantiate(tankPref, gameObject.transform.position, gameObject.transform.rotation);
+		clone.gameObject.active = true;
+		if(sandbag != null)
+		{
+			clone.gameObject.SendMessage("Target", sandbag, SendMessageOptions.DontRequireReceiver);
+			if(sandbag.tag == "InstaSpawn"){
+				clone.GetComponent.<Animation>().Play("raise");
+				GetComponent.<Animation>().Play("sandSpew");
+			}
+			clone.gameObject.SendMessage("TankSpeed", SendMessageOptions.DontRequireReceiver);
+			clone.gameObject.SendMessage("Health", round * 10, SendMessageOptions.DontRequireReceiver);
+		}
+	}
+	else{
+		var size : int = Random.Range(0, spawners.Length);
+		spawners[size].SendMessage("SpawnTank", SendMessageOptions.DontRequireReceiver);
 	}
 }
 
